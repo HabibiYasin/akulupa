@@ -1,5 +1,11 @@
 # Changelog
 
+## Belum dirilis
+
+- Mic langsung mendengarkan saat dibuka; jeda ucapan sekitar 2 detik atau stop manual langsung memproses command dan membuka konfirmasi yang sesuai.
+- Menghapus langkah Gunakan teks untuk hasil suara. Catatan tetap disimpan setelah konfirmasi pengguna.
+- Memperbaiki tombol mic yang bisa terkunci setelah error saat stop; sesi lama dilepas sebelum command diteruskan dan operasi recognizer diurutkan agar mic dapat digunakan berulang.
+
 ## 0.3.0 — Phase 3 — 2026-09-24
 
 - Ekspor pengingat melalui editor Kalender Android, dengan pilihan akun di aplikasi tujuan.

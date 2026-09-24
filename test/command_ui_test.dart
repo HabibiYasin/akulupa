@@ -2,6 +2,7 @@ import 'package:aku_lupa/app.dart';
 import 'package:aku_lupa/core/app_services.dart';
 import 'package:aku_lupa/core/database/app_database.dart';
 import 'package:aku_lupa/core/notifications/notification_gateway.dart';
+import 'package:aku_lupa/core/speech/speech_service.dart';
 import 'package:aku_lupa/shared/providers.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -9,9 +10,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'voice_input_test.dart' show FakeSpeech;
+
 Future<AppServices> setup(
   WidgetTester tester, {
   Future<void> Function(AppServices)? seed,
+  SpeechService? speech,
 }) async {
   await initializeDateFormatting('id_ID');
   tester.view.physicalSize = const Size(420, 940);
@@ -24,7 +28,11 @@ Future<AppServices> setup(
     await tester.pumpAndSettle();
     await tester.runAsync(db.close);
   });
-  final services = AppServices(db, AndroidNotificationGateway());
+  final services = AppServices(
+    db,
+    AndroidNotificationGateway(),
+    speech: speech,
+  );
   await tester.runAsync(services.settings.get);
   if (seed != null) await tester.runAsync(() => seed(services));
   await tester.pumpWidget(
@@ -45,6 +53,27 @@ Future<void> submit(WidgetTester tester, String text) async {
 }
 
 void main() {
+  testWidgets('voice stop opens command preview directly and can be reused', (
+    tester,
+  ) async {
+    final speech = FakeSpeech();
+    final services = await setup(tester, speech: speech);
+    for (final command in ['gelas di atas meja', 'kunci di laci']) {
+      await tester.tap(find.byTooltip('Ucapkan perintah'));
+      await tester.pumpAndSettle();
+      speech.text!(command);
+      await tester.tap(find.text('Selesai & proses'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+      expect(find.text('Ingat lokasi ini?'), findsOneWidget);
+      await tester.tap(find.text('Batal'));
+      await tester.pumpAndSettle();
+    }
+    expect(await tester.runAsync(() => services.items.find('gelas')), isEmpty);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
   testWidgets(
     'gelas diatas meja opens populated preview without manual fallback',
     (tester) async {

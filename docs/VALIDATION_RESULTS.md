@@ -1,5 +1,11 @@
 # Hasil verifikasi
 
+## Perbaikan alur suara setelah Phase 3
+
+- Mic otomatis mulai saat dialog dibuka; 2 detik tanpa hasil ucapan baru atau stop manual meneruskan command ke alur konfirmasi tanpa tombol Gunakan teks.
+- Tes mencakup timer yang direset ucapan baru, stop manual/final transcript, sesi kosong, batal, error pengenal, retry segera setelah stop gagal, mic dibuka dua kali, Home langsung membuka preview tanpa menyimpan, dan antrean cancel/listen native. Seluruh **222 tes lulus**.
+- Pengujian memakai recognizer palsu untuk reproduksi deterministik. Akurasi ucapan dan jeda sebenarnya tetap perlu diperiksa di HP; belum mengklaim pengujian mikrofon fisik. Gunakan hot restart setelah mengganti implementasi layanan suara.
+
 ## Phase 3 — 24 September 2026
 
 - `flutter analyze`: bersih. `flutter test`: **211 tes lulus**. `flutter build apk --debug`: berhasil, versi **0.3.0+3**.

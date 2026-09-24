@@ -54,7 +54,10 @@ class _HomePageState extends ConsumerState<HomePage> {
       context: context,
       builder: (_) => VoiceInput(speech: ref.read(servicesProvider).speech),
     );
-    if (result != null && mounted) setState(() => input.text = result);
+    if (result != null && mounted) {
+      setState(() => input.text = result);
+      await submit();
+    }
   }
 
   @override
