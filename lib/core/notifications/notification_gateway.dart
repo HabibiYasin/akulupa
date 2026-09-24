@@ -3,6 +3,8 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'android_recurrence.dart';
+
 class Alarm {
   const Alarm({
     required this.id,
@@ -11,6 +13,8 @@ class Alarm {
     required this.at,
     required this.payload,
     this.daily = false,
+    this.weekly = false,
+    this.doneLabel = 'Sudah',
   });
   final int id;
   final String title;
@@ -18,11 +22,14 @@ class Alarm {
   final DateTime at;
   final String payload;
   final bool daily;
+  final bool weekly;
+  final String doneLabel;
 }
 
 abstract interface class NotificationGateway {
   Future<void> schedule(Alarm alarm);
   Future<void> cancel(int id);
+  Future<void> cancelHabit(int id);
 }
 
 class AndroidNotificationGateway implements NotificationGateway {
@@ -73,44 +80,79 @@ class AndroidNotificationGateway implements NotificationGateway {
   @override
   Future<void> cancel(int id) => plugin.cancel(id: id);
   @override
+  Future<void> cancelHabit(int id) async {
+    final ids = <int>{-id};
+    for (final n in await plugin.pendingNotificationRequests()) {
+      if (n.payload == 'habit:$id' ||
+          (n.payload?.startsWith('habit:$id:') ?? false)) {
+        ids.add(n.id);
+      }
+    }
+    for (final n in await plugin.getActiveNotifications()) {
+      final value = n.id;
+      if (value != null &&
+          value <= -(1000000 + id * 1024) &&
+          value > -(1000000 + (id + 1) * 1024)) {
+        ids.add(value);
+      }
+    }
+    for (final value in ids) {
+      await cancel(value);
+    }
+  }
+
+  @override
   Future<void> schedule(Alarm alarm) async {
     if (!initialized) throw StateError('Notifikasi belum siap.');
+    final details = AndroidNotificationDetails(
+      'aku_lupa_reminders',
+      'Pengingat Aku Lupa',
+      channelDescription: 'Pengingat dan rutinitas pribadi',
+      importance: Importance.high,
+      priority: Priority.high,
+      actions: [
+        AndroidNotificationAction(
+          'done',
+          alarm.doneLabel,
+          showsUserInterface: true,
+        ),
+        if (alarm.payload.startsWith('reminder:'))
+          const AndroidNotificationAction(
+            'snooze',
+            'Ingatkan lagi 10 menit',
+            showsUserInterface: true,
+          ),
+        const AndroidNotificationAction(
+          'skip',
+          'Lewati',
+          showsUserInterface: true,
+        ),
+      ],
+    );
+    final mode = exact
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle;
+    final at = tz.TZDateTime.from(alarm.at, tz.local);
+    if (alarm.daily || alarm.weekly) {
+      await scheduleAndroidRecurrence(
+        id: alarm.id,
+        title: alarm.title,
+        body: alarm.body,
+        payload: alarm.payload,
+        at: at,
+        weekly: alarm.weekly,
+        details: details,
+        mode: mode,
+      );
+      return;
+    }
     await plugin.zonedSchedule(
       id: alarm.id,
       title: alarm.title,
       body: alarm.body,
-      scheduledDate: tz.TZDateTime.from(alarm.at, tz.local),
-      notificationDetails: NotificationDetails(
-        android: AndroidNotificationDetails(
-          'aku_lupa_reminders',
-          'Pengingat Aku Lupa',
-          channelDescription: 'Pengingat dan rutinitas pribadi',
-          importance: Importance.high,
-          priority: Priority.high,
-          actions: [
-            const AndroidNotificationAction(
-              'done',
-              'Sudah',
-              showsUserInterface: true,
-            ),
-            if (!alarm.daily)
-              const AndroidNotificationAction(
-                'snooze',
-                'Ingatkan lagi 10 menit',
-                showsUserInterface: true,
-              ),
-            const AndroidNotificationAction(
-              'skip',
-              'Lewati',
-              showsUserInterface: true,
-            ),
-          ],
-        ),
-      ),
-      androidScheduleMode: exact
-          ? AndroidScheduleMode.exactAllowWhileIdle
-          : AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: alarm.daily ? DateTimeComponents.time : null,
+      scheduledDate: at,
+      notificationDetails: NotificationDetails(android: details),
+      androidScheduleMode: mode,
       payload: alarm.payload,
     );
   }

@@ -43,6 +43,10 @@ class Habits extends Table {
   TextColumn get repeatPattern =>
       textEnum<RepeatPattern>().withDefault(const Constant('daily'))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  IntColumn get weekday => integer().nullable()();
+  IntColumn get targetCount => integer().withDefault(const Constant(1))();
+  TextColumn get unit => text().nullable()();
+  IntColumn get endTime => integer().nullable()();
   DateTimeColumn get createdAt => dateTime()();
 }
 
@@ -54,6 +58,7 @@ class HabitLogs extends Table {
   TextColumn get date => text()();
   TextColumn get status => textEnum<EntryStatus>()();
   DateTimeColumn get completedAt => dateTime().nullable()();
+  IntColumn get progress => integer().withDefault(const Constant(0))();
   @override
   List<Set<Column>> get uniqueKeys => [
     {habitId, date},
@@ -94,14 +99,22 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
-    // Add explicit from/to migrations here when schemaVersion is increased.
     onUpgrade: (m, from, to) async {
-      throw StateError('Migrasi database $from → $to belum tersedia.');
+      if (from < 2) {
+        await m.addColumn(habits, habits.weekday);
+        await m.addColumn(habits, habits.targetCount);
+        await m.addColumn(habits, habits.unit);
+        await m.addColumn(habits, habits.endTime);
+        await m.addColumn(habitLogs, habitLogs.progress);
+        await customStatement(
+          "UPDATE habit_logs SET progress = 1 WHERE status = 'completed'",
+        );
+      }
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');

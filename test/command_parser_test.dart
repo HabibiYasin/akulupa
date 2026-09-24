@@ -117,10 +117,14 @@ void main() {
       expect(result.date, DateTime(2026, 9, 9));
       expect(result.notes.join(), contains('kemarin'));
     });
-    test('pengulangan selain harian belum didukung', () {
+    test('pengulangan mingguan dikenali', () {
       expect(
         parse('Ingatkan rapat setiap senin jam 8').intent,
-        CommandIntent.unknown,
+        CommandIntent.createHabit,
+      );
+      expect(
+        parse('Ingatkan rapat setiap senin jam 8').weekday,
+        DateTime.monday,
       );
     });
     for (final input in [

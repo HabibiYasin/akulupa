@@ -9,6 +9,10 @@ import '../../shared/widgets.dart';
 import '../memory/memory_page.dart';
 import '../reminders/schedule_page.dart';
 import 'command_confirmation.dart';
+import 'command_fallback.dart';
+import 'command_action_confirmation.dart';
+import 'voice_input.dart';
+import '../../core/photos/photo_service.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key, required this.onNavigate});
@@ -21,6 +25,38 @@ class _HomePageState extends ConsumerState<HomePage> {
   final input = TextEditingController();
   final focus = FocusNode();
   bool busy = false;
+  String exampleHint = 'Taruh kunci motor di laci meja';
+  PreparedPhoto? recoveredPhoto;
+  String? recoveryError;
+  @override
+  void initState() {
+    super.initState();
+    recoverPhoto();
+  }
+
+  Future<void> recoverPhoto() async {
+    try {
+      final photo = await ref.read(servicesProvider).photos.recover();
+      if (mounted && photo != null) setState(() => recoveredPhoto = photo);
+    } catch (_) {
+      // Missing plugin during widget tests is also harmless to text commands.
+      if (mounted) {
+        setState(
+          () => recoveryError = 'Foto sebelumnya belum bisa dipulihkan. Kamu bisa memilih ulang saat mencatat barang.',
+        );
+      }
+    }
+  }
+
+  Future<void> voice() async {
+    focus.unfocus();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (_) => VoiceInput(speech: ref.read(servicesProvider).speech),
+    );
+    if (result != null && mounted) setState(() => input.text = result);
+  }
+
   @override
   void dispose() {
     input.dispose();
@@ -34,14 +70,18 @@ class _HomePageState extends ConsumerState<HomePage> {
     setState(() => busy = true);
     try {
       final services = ref.read(servicesProvider);
-      final parsed = services.parser.parse(input.text, now: DateTime.now());
+      var parsed = services.parser.parse(input.text, now: DateTime.now());
       if (parsed.intent == CommandIntent.unknown) {
-        showMessage(
-          context,
-          parsed.notes.isEmpty
-              ? 'Belum paham. Coba tulis kegiatan dan waktunya, misalnya “Jumat ini aku ke dokter jam 9”, atau “Taruh kunci di laci”.'
-              : parsed.notes.join('\n'),
-        );
+        final selected = await chooseCommandType(context, parsed);
+        if (selected == null || !mounted) return;
+        parsed = selected;
+      }
+      if (parsed.isMutation) {
+        final result = await confirmCommandAction(context, services, parsed);
+        if (result != null && mounted) {
+          input.clear();
+          showMessage(context, result);
+        }
       } else if (parsed.isQuery) {
         final answer = await services.query(parsed);
         if (!mounted) return;
@@ -75,6 +115,8 @@ class _HomePageState extends ConsumerState<HomePage> {
           showMessage(context, result);
         }
       }
+    } on ArgumentError catch (e) {
+      if (mounted) showMessage(context, '${e.message}');
     } catch (_) {
       if (mounted) {
         showMessage(
@@ -134,6 +176,46 @@ class _HomePageState extends ConsumerState<HomePage> {
           style: TextStyle(color: muted, fontSize: 15),
         ),
         const SizedBox(height: 24),
+        if (recoveredPhoto != null)
+          Card(
+            child: ListTile(
+              title: const Text('Foto sebelumnya berhasil dipulihkan'),
+              subtitle: const Text(
+                'Lengkapi nama barang dan lokasi sebelum menyimpan.',
+              ),
+              trailing: IconButton(
+                tooltip: 'Abaikan foto',
+                onPressed: busy
+                    ? null
+                    : () => setState(() => recoveredPhoto = null),
+                icon: const Icon(Icons.close),
+              ),
+              onTap: busy
+                  ? null
+                  : () async {
+                      final result = await showModalBottomSheet<String>(
+                        context: context,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        isDismissible: false,
+                        enableDrag: false,
+                        builder: (_) => CommandConfirmation(
+                          command: const ParsedCommand(
+                            intent: CommandIntent.saveItemLocation,
+                            original: 'Foto yang dipulihkan',
+                          ),
+                          initialPhoto: recoveredPhoto,
+                        ),
+                      );
+                      if (result != null && mounted) {
+                        setState(() => recoveredPhoto = null);
+                        if (context.mounted) showMessage(context, result);
+                      }
+                    },
+            ),
+          ),
+        if (recoveryError != null)
+          Text(recoveryError!, style: const TextStyle(color: muted)),
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -153,31 +235,36 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
               const SizedBox(height: 18),
               Tooltip(
-                message: 'Input suara hadir pada tahap berikutnya. Gunakan teks sekarang.',
+                message: 'Ucapkan perintah',
                 child: Semantics(
-                  label: 'Input suara belum tersedia',
-                  child: Container(
-                    width: 76,
-                    height: 76,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD3E5BC),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFF406052),
-                        width: 7,
+                  label: 'Input suara',
+                  button: true,
+                  child: InkWell(
+                    onTap: busy ? null : voice,
+                    customBorder: const CircleBorder(),
+                    child: Container(
+                      width: 76,
+                      height: 76,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD3E5BC),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFF406052),
+                          width: 7,
+                        ),
                       ),
-                    ),
-                    child: const Icon(
-                      Icons.mic_none_rounded,
-                      color: ink,
-                      size: 33,
+                      child: const Icon(
+                        Icons.mic_none_rounded,
+                        color: ink,
+                        size: 33,
+                      ),
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 9),
               const Text(
-                'Voice segera hadir · tulis dulu, yuk',
+                'Tekan mic untuk bicara, atau tulis di bawah',
                 style: TextStyle(color: Color(0xFFC9D8CB), fontSize: 12),
               ),
               const SizedBox(height: 20),
@@ -188,8 +275,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                 minLines: 2,
                 maxLines: 4,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  hintText: 'Contoh: Taruh kunci motor di laci meja',
+                decoration: InputDecoration(
+                  hintText: 'Contoh: $exampleHint',
                   filled: true,
                   fillColor: Color(0xFFFAFBF6),
                   contentPadding: EdgeInsets.all(16),
@@ -230,7 +317,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 onPressed: busy
                     ? null
                     : () {
-                        input.text = example.$2;
+                        setState(() => exampleHint = example.$2);
                         focus.requestFocus();
                       },
               ),

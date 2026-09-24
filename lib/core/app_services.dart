@@ -1,10 +1,13 @@
 import 'package:flutter/foundation.dart';
 
 import 'database/app_database.dart';
+import 'command_actions.dart';
 import 'models.dart';
 import 'notifications/notification_gateway.dart';
 import 'notifications/reminder_coordinator.dart';
 import 'parser/command_parser.dart';
+import 'photos/photo_service.dart';
+import 'speech/speech_service.dart';
 import 'utils/dates.dart';
 import '../features/activity/activity_repository.dart';
 import '../features/habits/habit_repository.dart';
@@ -20,6 +23,11 @@ class CommandDraft {
     this.at,
     this.minutes,
     this.important = false,
+    this.weekday,
+    this.targetCount = 1,
+    this.unit,
+    this.endMinutes,
+    this.photo,
   });
   final CommandIntent intent;
   final String title;
@@ -27,10 +35,21 @@ class CommandDraft {
   final DateTime? at;
   final int? minutes;
   final bool important;
+  final int? weekday;
+  final int targetCount;
+  final String? unit;
+  final int? endMinutes;
+  final PreparedPhoto? photo;
 }
 
 class AppServices {
-  AppServices(this.db, this.notifications) {
+  AppServices(
+    this.db,
+    this.notifications, {
+    SpeechService? speech,
+    PhotoService? photos,
+  }) : speech = speech ?? AndroidSpeechService(),
+       photos = photos ?? LocalPhotoService() {
     items = ItemRepository(db);
     reminders = ReminderRepository(db);
     habits = HabitRepository(db);
@@ -45,6 +64,8 @@ class AppServices {
   }
   final AppDatabase db;
   final AndroidNotificationGateway notifications;
+  final SpeechService speech;
+  final PhotoService photos;
   late final ItemRepository items;
   late final ReminderRepository reminders;
   late final HabitRepository habits;
@@ -150,6 +171,37 @@ class AppServices {
     );
   }
 
+  Future<void> incrementHabit(int id) async {
+    await habits.increment(id, DateTime.now(), 1);
+    await _notificationJob(
+      () async => coordinator.scheduleHabit(
+        (await habits.get(id))!,
+        await settings.get(),
+      ),
+    );
+  }
+
+  Future<String> applyCommand(ParsedCommand command, Set<int> ids) async {
+    final result = await CommandActions(db).apply(command, ids);
+    if (command.intent == CommandIntent.updateItemLocation) return result;
+    await _notificationJob(() async {
+      for (final id in ids) {
+        if (command.intent == CommandIntent.cancelReminder) {
+          await coordinator.scheduleReminder(
+            (await reminders.get(id))!,
+            await settings.get(),
+          );
+        } else {
+          await coordinator.scheduleHabit(
+            (await habits.get(id))!,
+            await settings.get(),
+          );
+        }
+      }
+    });
+    return result;
+  }
+
   Future<void> toggleHabit(Habit habit) async {
     await habits.setActive(habit.id, !habit.isActive);
     await _notificationJob(
@@ -189,7 +241,14 @@ class AppServices {
   Future<String> save(CommandDraft draft) async {
     switch (draft.intent) {
       case CommandIntent.saveItemLocation:
-        await items.save(draft.title, draft.location);
+        String? path;
+        try {
+          if (draft.photo != null) path = await photos.store(draft.photo!);
+          await items.save(draft.title, draft.location, photoPath: path);
+        } catch (_) {
+          if (path != null) await photos.discard(path);
+          rethrow;
+        }
       case CommandIntent.createReminder:
         final reminder = await reminders.create(
           draft.title,
@@ -201,7 +260,14 @@ class AppServices {
               coordinator.scheduleReminder(reminder, await settings.get()),
         );
       case CommandIntent.createHabit:
-        final habit = await habits.create(draft.title, draft.minutes!);
+        final habit = await habits.create(
+          draft.title,
+          draft.minutes!,
+          weekday: draft.weekday,
+          targetCount: draft.targetCount,
+          unit: draft.unit,
+          endMinutes: draft.endMinutes,
+        );
         await _notificationJob(
           () async => coordinator.scheduleHabit(habit, await settings.get()),
         );

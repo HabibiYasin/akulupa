@@ -1,4 +1,30 @@
-# Hasil verifikasi — 22 September 2026
+# Hasil verifikasi
+
+## Phase 2 — 23 September 2026
+
+Perbaikan berikutnya: “gelas diatas meja” kini langsung membuka preview berisi nama **gelas** dan lokasi **atas meja**. Ditambahkan 22 tes untuk preposisi tergabung, pertanyaan/negasi, dan preview UI; seluruh **196 tes lulus**, analyzer bersih. APK debug diperbarui.
+
+- Flutter analyzer bersih; **174 unit/widget test lulus**. Tes baru mencakup angka hasil dikte, stop/edit/batal suara, penolakan izin, kompresi bertahap, preview foto tanpa penulisan, keterkaitan foto dengan riwayat, serta pembersihan file jika DB gagal.
+- APK debug **0.2.0+2** berhasil dibangun dan diinstal sebagai pembaruan di emulator Medium_Phone API 37; catatan lama tetap tersedia.
+- Galeri Android → pilih gambar → preview kompresi → Simpan: berhasil. File JPEG permanen berukuran **140.382 byte (138 KB)** ditemukan dalam `app_flutter/photos/`.
+- Setelah force-stop dan cold start, foto tetap tampil pada thumbnail dan riwayat lokasi. Mengetuk foto membuka tampilan penuh tanpa exception. [Bukti foto pada riwayat](phase2-photo-emulator.png); gambar di dalam lampiran merupakan screenshot Phase 1 yang dipakai sebagai bahan uji.
+- Mic → Mulai bicara memunculkan izin rekam audio Android. Memilih “Don’t allow” menampilkan pesan izin dan tetap menyediakan isian teks, tanpa crash.
+- Pengenalan ucapan nyata melalui mikrofon HP, paket bahasa offline/mode pesawat, pengambilan foto kamera fisik, dan pemulihan picker saat process death belum diuji pada perangkat fisik. Transkripsi serta pembatalan diuji melalui service palsu pada widget test; ini tidak membuktikan akurasi speech engine perangkat.
+- Build masih memberi peringatan kompatibilitas Kotlin pada `flutter_timezone` dan `flutter_image_compress_common`; build Flutter stable yang digunakan tetap berhasil.
+
+Sumber utama fase 2: `core/speech/speech_service.dart`, `core/photos/photo_service.dart`, `core/parser/spoken_numbers.dart`, dialog `features/home/voice_input.dart`, konfirmasi foto, dan `features/memory/memory_photo.dart`. Foto memakai kolom `photoPath` yang sudah ada pada schema v2.
+
+## Pembaruan perintah bahasa sehari-hari
+
+- `flutter analyze`: bersih. `flutter test`: **154 tes lulus**, termasuk seluruh 11 contoh pengguna, seleksi kandidat, pembatalan berdasarkan tanggal, riwayat barang, progres gelas, skip tanggal mendatang, migrasi v1→v2, dan form konfirmasi/fallback.
+- APK debug dibangun, diinstal sebagai pembaruan, dan dibuka di emulator Medium_Phone API 37.
+- Dari UI emulator, “minum air setiap hari minimal 10 gelas” menghasilkan 10 jadwal native `Daily`, tersebar dari 06.00 hingga 22.00. “sudah minum 10 gelas” membuka konfirmasi progres.
+- “olahraga tiap minggu pagi” terdaftar native `Weekly` pada **27 September 2026 06.30**. Setelah “minggu pagi ini skip olahraga dulu” dan konfirmasi, jadwal native berubah menjadi **4 Oktober 2026 06.30**, tanpa mematikan rutinitas.
+- Tanggal dan frekuensi di atas diperiksa dari cache penjadwalan Android pada emulator, bukan hanya fake gateway. Jalur native yang mempertahankan tanggal mulai memiliki tes kontrak tersendiri; plugin dipatok 22.3.1.
+- Setelah force-stop lalu cold start untuk menguji pemuatan ulang, Jadwal tetap menampilkan **10/10 gelas hari ini**, dan alarm olahraga tetap **4 Oktober 2026 06.30 Weekly**.
+- Pengiriman jadwal mingguan hingga tanggal tersebut, perilaku reboot/Doze, dan ponsel fisik belum diuji pada pembaruan ini. Bukti pengiriman notifikasi Phase 1 di bawah tetap merupakan pengujian terpisah.
+
+## Baseline Phase 1
 
 Lingkungan: Windows, Flutter 3.47.1 stable, Dart 3.13.1, emulator Android Medium_Phone API 37.
 

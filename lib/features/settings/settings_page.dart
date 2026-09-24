@@ -115,7 +115,7 @@ class SettingsPage extends ConsumerWidget {
             child: Padding(
               padding: EdgeInsets.all(20),
               child: Text(
-                'Semua catatan disimpan di perangkat ini. Tidak perlu akun atau internet.\n\nVoice, foto, ekspor cadangan, dan integrasi Google belum tersedia. Menghapus data aplikasi atau mencopot aplikasi akan menghapus catatan.',
+                'Catatan dan foto disimpan di perangkat ini. Input suara meminta mode offline bahasa Indonesia; ketersediaannya mengikuti pengenal suara HP. Hasil suara selalu dapat diperiksa sebelum disimpan.\n\nEkspor cadangan dan integrasi Google belum tersedia. Menghapus data aplikasi atau mencopot aplikasi akan menghapus catatan dan foto.',
                 style: TextStyle(height: 1.6),
               ),
             ),
@@ -123,7 +123,7 @@ class SettingsPage extends ConsumerWidget {
           const SizedBox(height: 16),
           const Center(
             child: Text(
-              'Aku Lupa · 0.1.0\nSedikit lupa, tetap tenang.',
+              'Aku Lupa · 0.2.0\nSedikit lupa, tetap tenang.',
               textAlign: TextAlign.center,
               style: TextStyle(color: muted, height: 1.8),
             ),

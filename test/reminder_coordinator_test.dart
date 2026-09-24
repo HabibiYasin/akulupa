@@ -14,6 +14,17 @@ class FakeNotifications implements NotificationGateway {
   final alarms = <int, Alarm>{};
   final cancelled = <int>[];
   @override
+  Future<void> cancelHabit(int id) async {
+    for (final alarm in alarms.values.toList()) {
+      if (alarm.payload == 'habit:$id' ||
+          alarm.payload.startsWith('habit:$id:')) {
+        await cancel(alarm.id);
+      }
+    }
+    await cancel(-id);
+  }
+
+  @override
   Future<void> cancel(int id) async {
     cancelled.add(id);
     alarms.remove(id);

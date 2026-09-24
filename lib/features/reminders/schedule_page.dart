@@ -77,28 +77,36 @@ class HabitTile extends ConsumerWidget {
     required this.habit,
     required this.status,
     this.manage = false,
+    this.progress = 0,
   });
   final Habit habit;
   final EntryStatus status;
   final bool manage;
+  final int progress;
+  bool get scheduledToday =>
+      habit.weekday == null || habit.weekday == DateTime.now().weekday;
   @override
   Widget build(BuildContext context, WidgetRef ref) => Card(
     child: ListTile(
       leading: IconButton(
-        tooltip: status == EntryStatus.completed
+        tooltip: habit.targetCount > 1 && status == EntryStatus.pending
+            ? '+1 ${habit.unit}'
+            : status == EntryStatus.completed
             ? 'Batalkan selesai hari ini'
             : 'Selesai hari ini',
-        onPressed: habit.isActive
+        onPressed: habit.isActive && scheduledToday
             ? () => runAction(
                 context,
-                () => ref
-                    .read(servicesProvider)
-                    .markHabit(
-                      habit.id,
-                      status == EntryStatus.completed
-                          ? EntryStatus.pending
-                          : EntryStatus.completed,
-                    ),
+                () => habit.targetCount > 1 && status == EntryStatus.pending
+                    ? ref.read(servicesProvider).incrementHabit(habit.id)
+                    : ref
+                          .read(servicesProvider)
+                          .markHabit(
+                            habit.id,
+                            status == EntryStatus.completed
+                                ? EntryStatus.pending
+                                : EntryStatus.completed,
+                          ),
               )
             : null,
         icon: Icon(
@@ -106,6 +114,8 @@ class HabitTile extends ConsumerWidget {
               ? Icons.check_circle
               : status == EntryStatus.skipped
               ? Icons.skip_next
+              : habit.targetCount > 1
+              ? Icons.add_circle_outline
               : Icons.radio_button_unchecked,
           color: status == EntryStatus.completed ? ink : muted,
         ),
@@ -115,7 +125,11 @@ class HabitTile extends ConsumerWidget {
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
-        '${minutesText(habit.scheduleTime)} · ${habit.isActive ? 'Setiap hari' : 'Dijeda'}${status == EntryStatus.skipped ? ' · Hari ini dilewati' : ''}',
+        '${minutesText(habit.scheduleTime)}${habit.endTime == null ? '' : '–${minutesText(habit.endTime!)}'} · ${!habit.isActive
+            ? 'Dijeda'
+            : habit.weekday == null
+            ? 'Setiap hari'
+            : 'Setiap ${const ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][habit.weekday! - 1]}'}${habit.targetCount > 1 ? '\n$progress/${habit.targetCount} ${habit.unit} hari ini' : ''}${status == EntryStatus.skipped ? ' · Hari ini dilewati' : ''}',
       ),
       trailing: manage
           ? PopupMenuButton<String>(
@@ -135,7 +149,7 @@ class HabitTile extends ConsumerWidget {
                     habit.isActive ? 'Jeda rutinitas' : 'Aktifkan rutinitas',
                   ),
                 ),
-                if (habit.isActive)
+                if (habit.isActive && scheduledToday)
                   const PopupMenuItem(
                     value: 'skip',
                     child: Text('Lewati hari ini'),
@@ -153,6 +167,13 @@ EntryStatus statusFor(List<HabitLog> logs, int habitId, DateTime now) =>
         .firstOrNull
         ?.status ??
     EntryStatus.pending;
+
+int progressFor(List<HabitLog> logs, int habitId, DateTime now) =>
+    logs
+        .where((l) => l.habitId == habitId && l.date == dayKey(now))
+        .firstOrNull
+        ?.progress ??
+    0;
 
 class TodaySchedule extends ConsumerWidget {
   const TodaySchedule({super.key});
@@ -176,12 +197,17 @@ class TodaySchedule extends ConsumerWidget {
                       (r.snoozedUntil ?? r.scheduledAt).minute,
                   child: ReminderTile(reminder: r),
                 ),
-              for (final h in habits.where((h) => h.isActive))
+              for (final h in habits.where(
+                (h) =>
+                    h.isActive &&
+                    (h.weekday == null || h.weekday == now.weekday),
+              ))
                 (
                   minutes: h.scheduleTime,
                   child: HabitTile(
                     habit: h,
                     status: statusFor(logs, h.id, now),
+                    progress: progressFor(logs, h.id, now),
                   ),
                 ),
             ]..sort((a, b) => a.minutes.compareTo(b.minutes));
@@ -262,7 +288,7 @@ class SchedulePage extends ConsumerWidget {
                   ],
                 ),
         ),
-        const SectionTitle('Rutinitas harian'),
+        const SectionTitle('Rutinitas'),
         AsyncSection(
           value: ref.watch(habitsProvider),
           builder: (habits) => AsyncSection(
@@ -280,6 +306,7 @@ class SchedulePage extends ConsumerWidget {
                         HabitTile(
                           habit: h,
                           status: statusFor(logs, h.id, now),
+                          progress: progressFor(logs, h.id, now),
                           manage: true,
                         ),
                       const SizedBox(height: 12),

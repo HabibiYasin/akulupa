@@ -1307,6 +1307,49 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _weekdayMeta = const VerificationMeta(
+    'weekday',
+  );
+  @override
+  late final GeneratedColumn<int> weekday = GeneratedColumn<int>(
+    'weekday',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _targetCountMeta = const VerificationMeta(
+    'targetCount',
+  );
+  @override
+  late final GeneratedColumn<int> targetCount = GeneratedColumn<int>(
+    'target_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _endTimeMeta = const VerificationMeta(
+    'endTime',
+  );
+  @override
+  late final GeneratedColumn<int> endTime = GeneratedColumn<int>(
+    'end_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1325,6 +1368,10 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
     scheduleTime,
     repeatPattern,
     isActive,
+    weekday,
+    targetCount,
+    unit,
+    endTime,
     createdAt,
   ];
   @override
@@ -1367,6 +1414,33 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
         isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
       );
     }
+    if (data.containsKey('weekday')) {
+      context.handle(
+        _weekdayMeta,
+        weekday.isAcceptableOrUnknown(data['weekday']!, _weekdayMeta),
+      );
+    }
+    if (data.containsKey('target_count')) {
+      context.handle(
+        _targetCountMeta,
+        targetCount.isAcceptableOrUnknown(
+          data['target_count']!,
+          _targetCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    }
+    if (data.containsKey('end_time')) {
+      context.handle(
+        _endTimeMeta,
+        endTime.isAcceptableOrUnknown(data['end_time']!, _endTimeMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -1406,6 +1480,22 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
       )!,
+      weekday: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}weekday'],
+      ),
+      targetCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}target_count'],
+      )!,
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      ),
+      endTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_time'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -1430,6 +1520,10 @@ class Habit extends DataClass implements Insertable<Habit> {
   final int scheduleTime;
   final RepeatPattern repeatPattern;
   final bool isActive;
+  final int? weekday;
+  final int targetCount;
+  final String? unit;
+  final int? endTime;
   final DateTime createdAt;
   const Habit({
     required this.id,
@@ -1437,6 +1531,10 @@ class Habit extends DataClass implements Insertable<Habit> {
     required this.scheduleTime,
     required this.repeatPattern,
     required this.isActive,
+    this.weekday,
+    required this.targetCount,
+    this.unit,
+    this.endTime,
     required this.createdAt,
   });
   @override
@@ -1451,6 +1549,16 @@ class Habit extends DataClass implements Insertable<Habit> {
       );
     }
     map['is_active'] = Variable<bool>(isActive);
+    if (!nullToAbsent || weekday != null) {
+      map['weekday'] = Variable<int>(weekday);
+    }
+    map['target_count'] = Variable<int>(targetCount);
+    if (!nullToAbsent || unit != null) {
+      map['unit'] = Variable<String>(unit);
+    }
+    if (!nullToAbsent || endTime != null) {
+      map['end_time'] = Variable<int>(endTime);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -1462,6 +1570,14 @@ class Habit extends DataClass implements Insertable<Habit> {
       scheduleTime: Value(scheduleTime),
       repeatPattern: Value(repeatPattern),
       isActive: Value(isActive),
+      weekday: weekday == null && nullToAbsent
+          ? const Value.absent()
+          : Value(weekday),
+      targetCount: Value(targetCount),
+      unit: unit == null && nullToAbsent ? const Value.absent() : Value(unit),
+      endTime: endTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endTime),
       createdAt: Value(createdAt),
     );
   }
@@ -1479,6 +1595,10 @@ class Habit extends DataClass implements Insertable<Habit> {
         serializer.fromJson<String>(json['repeatPattern']),
       ),
       isActive: serializer.fromJson<bool>(json['isActive']),
+      weekday: serializer.fromJson<int?>(json['weekday']),
+      targetCount: serializer.fromJson<int>(json['targetCount']),
+      unit: serializer.fromJson<String?>(json['unit']),
+      endTime: serializer.fromJson<int?>(json['endTime']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1493,6 +1613,10 @@ class Habit extends DataClass implements Insertable<Habit> {
         $HabitsTable.$converterrepeatPattern.toJson(repeatPattern),
       ),
       'isActive': serializer.toJson<bool>(isActive),
+      'weekday': serializer.toJson<int?>(weekday),
+      'targetCount': serializer.toJson<int>(targetCount),
+      'unit': serializer.toJson<String?>(unit),
+      'endTime': serializer.toJson<int?>(endTime),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -1503,6 +1627,10 @@ class Habit extends DataClass implements Insertable<Habit> {
     int? scheduleTime,
     RepeatPattern? repeatPattern,
     bool? isActive,
+    Value<int?> weekday = const Value.absent(),
+    int? targetCount,
+    Value<String?> unit = const Value.absent(),
+    Value<int?> endTime = const Value.absent(),
     DateTime? createdAt,
   }) => Habit(
     id: id ?? this.id,
@@ -1510,6 +1638,10 @@ class Habit extends DataClass implements Insertable<Habit> {
     scheduleTime: scheduleTime ?? this.scheduleTime,
     repeatPattern: repeatPattern ?? this.repeatPattern,
     isActive: isActive ?? this.isActive,
+    weekday: weekday.present ? weekday.value : this.weekday,
+    targetCount: targetCount ?? this.targetCount,
+    unit: unit.present ? unit.value : this.unit,
+    endTime: endTime.present ? endTime.value : this.endTime,
     createdAt: createdAt ?? this.createdAt,
   );
   Habit copyWithCompanion(HabitsCompanion data) {
@@ -1523,6 +1655,12 @@ class Habit extends DataClass implements Insertable<Habit> {
           ? data.repeatPattern.value
           : this.repeatPattern,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      weekday: data.weekday.present ? data.weekday.value : this.weekday,
+      targetCount: data.targetCount.present
+          ? data.targetCount.value
+          : this.targetCount,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      endTime: data.endTime.present ? data.endTime.value : this.endTime,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -1535,14 +1673,28 @@ class Habit extends DataClass implements Insertable<Habit> {
           ..write('scheduleTime: $scheduleTime, ')
           ..write('repeatPattern: $repeatPattern, ')
           ..write('isActive: $isActive, ')
+          ..write('weekday: $weekday, ')
+          ..write('targetCount: $targetCount, ')
+          ..write('unit: $unit, ')
+          ..write('endTime: $endTime, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, scheduleTime, repeatPattern, isActive, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    scheduleTime,
+    repeatPattern,
+    isActive,
+    weekday,
+    targetCount,
+    unit,
+    endTime,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1552,6 +1704,10 @@ class Habit extends DataClass implements Insertable<Habit> {
           other.scheduleTime == this.scheduleTime &&
           other.repeatPattern == this.repeatPattern &&
           other.isActive == this.isActive &&
+          other.weekday == this.weekday &&
+          other.targetCount == this.targetCount &&
+          other.unit == this.unit &&
+          other.endTime == this.endTime &&
           other.createdAt == this.createdAt);
 }
 
@@ -1561,6 +1717,10 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
   final Value<int> scheduleTime;
   final Value<RepeatPattern> repeatPattern;
   final Value<bool> isActive;
+  final Value<int?> weekday;
+  final Value<int> targetCount;
+  final Value<String?> unit;
+  final Value<int?> endTime;
   final Value<DateTime> createdAt;
   const HabitsCompanion({
     this.id = const Value.absent(),
@@ -1568,6 +1728,10 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     this.scheduleTime = const Value.absent(),
     this.repeatPattern = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.weekday = const Value.absent(),
+    this.targetCount = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.endTime = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   HabitsCompanion.insert({
@@ -1576,6 +1740,10 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     required int scheduleTime,
     this.repeatPattern = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.weekday = const Value.absent(),
+    this.targetCount = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.endTime = const Value.absent(),
     required DateTime createdAt,
   }) : title = Value(title),
        scheduleTime = Value(scheduleTime),
@@ -1586,6 +1754,10 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     Expression<int>? scheduleTime,
     Expression<String>? repeatPattern,
     Expression<bool>? isActive,
+    Expression<int>? weekday,
+    Expression<int>? targetCount,
+    Expression<String>? unit,
+    Expression<int>? endTime,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -1594,6 +1766,10 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
       if (scheduleTime != null) 'schedule_time': scheduleTime,
       if (repeatPattern != null) 'repeat_pattern': repeatPattern,
       if (isActive != null) 'is_active': isActive,
+      if (weekday != null) 'weekday': weekday,
+      if (targetCount != null) 'target_count': targetCount,
+      if (unit != null) 'unit': unit,
+      if (endTime != null) 'end_time': endTime,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -1604,6 +1780,10 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     Value<int>? scheduleTime,
     Value<RepeatPattern>? repeatPattern,
     Value<bool>? isActive,
+    Value<int?>? weekday,
+    Value<int>? targetCount,
+    Value<String?>? unit,
+    Value<int?>? endTime,
     Value<DateTime>? createdAt,
   }) {
     return HabitsCompanion(
@@ -1612,6 +1792,10 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
       scheduleTime: scheduleTime ?? this.scheduleTime,
       repeatPattern: repeatPattern ?? this.repeatPattern,
       isActive: isActive ?? this.isActive,
+      weekday: weekday ?? this.weekday,
+      targetCount: targetCount ?? this.targetCount,
+      unit: unit ?? this.unit,
+      endTime: endTime ?? this.endTime,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -1636,6 +1820,18 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
     }
+    if (weekday.present) {
+      map['weekday'] = Variable<int>(weekday.value);
+    }
+    if (targetCount.present) {
+      map['target_count'] = Variable<int>(targetCount.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (endTime.present) {
+      map['end_time'] = Variable<int>(endTime.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1650,6 +1846,10 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
           ..write('scheduleTime: $scheduleTime, ')
           ..write('repeatPattern: $repeatPattern, ')
           ..write('isActive: $isActive, ')
+          ..write('weekday: $weekday, ')
+          ..write('targetCount: $targetCount, ')
+          ..write('unit: $unit, ')
+          ..write('endTime: $endTime, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -1718,6 +1918,18 @@ class $HabitLogsTable extends HabitLogs
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _progressMeta = const VerificationMeta(
+    'progress',
+  );
+  @override
+  late final GeneratedColumn<int> progress = GeneratedColumn<int>(
+    'progress',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1725,6 +1937,7 @@ class $HabitLogsTable extends HabitLogs
     date,
     status,
     completedAt,
+    progress,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1766,6 +1979,12 @@ class $HabitLogsTable extends HabitLogs
         ),
       );
     }
+    if (data.containsKey('progress')) {
+      context.handle(
+        _progressMeta,
+        progress.isAcceptableOrUnknown(data['progress']!, _progressMeta),
+      );
+    }
     return context;
   }
 
@@ -1801,6 +2020,10 @@ class $HabitLogsTable extends HabitLogs
         DriftSqlType.dateTime,
         data['${effectivePrefix}completed_at'],
       ),
+      progress: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}progress'],
+      )!,
     );
   }
 
@@ -1819,12 +2042,14 @@ class HabitLog extends DataClass implements Insertable<HabitLog> {
   final String date;
   final EntryStatus status;
   final DateTime? completedAt;
+  final int progress;
   const HabitLog({
     required this.id,
     required this.habitId,
     required this.date,
     required this.status,
     this.completedAt,
+    required this.progress,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1840,6 +2065,7 @@ class HabitLog extends DataClass implements Insertable<HabitLog> {
     if (!nullToAbsent || completedAt != null) {
       map['completed_at'] = Variable<DateTime>(completedAt);
     }
+    map['progress'] = Variable<int>(progress);
     return map;
   }
 
@@ -1852,6 +2078,7 @@ class HabitLog extends DataClass implements Insertable<HabitLog> {
       completedAt: completedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(completedAt),
+      progress: Value(progress),
     );
   }
 
@@ -1868,6 +2095,7 @@ class HabitLog extends DataClass implements Insertable<HabitLog> {
         serializer.fromJson<String>(json['status']),
       ),
       completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      progress: serializer.fromJson<int>(json['progress']),
     );
   }
   @override
@@ -1881,6 +2109,7 @@ class HabitLog extends DataClass implements Insertable<HabitLog> {
         $HabitLogsTable.$converterstatus.toJson(status),
       ),
       'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'progress': serializer.toJson<int>(progress),
     };
   }
 
@@ -1890,12 +2119,14 @@ class HabitLog extends DataClass implements Insertable<HabitLog> {
     String? date,
     EntryStatus? status,
     Value<DateTime?> completedAt = const Value.absent(),
+    int? progress,
   }) => HabitLog(
     id: id ?? this.id,
     habitId: habitId ?? this.habitId,
     date: date ?? this.date,
     status: status ?? this.status,
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    progress: progress ?? this.progress,
   );
   HabitLog copyWithCompanion(HabitLogsCompanion data) {
     return HabitLog(
@@ -1906,6 +2137,7 @@ class HabitLog extends DataClass implements Insertable<HabitLog> {
       completedAt: data.completedAt.present
           ? data.completedAt.value
           : this.completedAt,
+      progress: data.progress.present ? data.progress.value : this.progress,
     );
   }
 
@@ -1916,13 +2148,15 @@ class HabitLog extends DataClass implements Insertable<HabitLog> {
           ..write('habitId: $habitId, ')
           ..write('date: $date, ')
           ..write('status: $status, ')
-          ..write('completedAt: $completedAt')
+          ..write('completedAt: $completedAt, ')
+          ..write('progress: $progress')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, habitId, date, status, completedAt);
+  int get hashCode =>
+      Object.hash(id, habitId, date, status, completedAt, progress);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1931,7 +2165,8 @@ class HabitLog extends DataClass implements Insertable<HabitLog> {
           other.habitId == this.habitId &&
           other.date == this.date &&
           other.status == this.status &&
-          other.completedAt == this.completedAt);
+          other.completedAt == this.completedAt &&
+          other.progress == this.progress);
 }
 
 class HabitLogsCompanion extends UpdateCompanion<HabitLog> {
@@ -1940,12 +2175,14 @@ class HabitLogsCompanion extends UpdateCompanion<HabitLog> {
   final Value<String> date;
   final Value<EntryStatus> status;
   final Value<DateTime?> completedAt;
+  final Value<int> progress;
   const HabitLogsCompanion({
     this.id = const Value.absent(),
     this.habitId = const Value.absent(),
     this.date = const Value.absent(),
     this.status = const Value.absent(),
     this.completedAt = const Value.absent(),
+    this.progress = const Value.absent(),
   });
   HabitLogsCompanion.insert({
     this.id = const Value.absent(),
@@ -1953,6 +2190,7 @@ class HabitLogsCompanion extends UpdateCompanion<HabitLog> {
     required String date,
     required EntryStatus status,
     this.completedAt = const Value.absent(),
+    this.progress = const Value.absent(),
   }) : habitId = Value(habitId),
        date = Value(date),
        status = Value(status);
@@ -1962,6 +2200,7 @@ class HabitLogsCompanion extends UpdateCompanion<HabitLog> {
     Expression<String>? date,
     Expression<String>? status,
     Expression<DateTime>? completedAt,
+    Expression<int>? progress,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1969,6 +2208,7 @@ class HabitLogsCompanion extends UpdateCompanion<HabitLog> {
       if (date != null) 'date': date,
       if (status != null) 'status': status,
       if (completedAt != null) 'completed_at': completedAt,
+      if (progress != null) 'progress': progress,
     });
   }
 
@@ -1978,6 +2218,7 @@ class HabitLogsCompanion extends UpdateCompanion<HabitLog> {
     Value<String>? date,
     Value<EntryStatus>? status,
     Value<DateTime?>? completedAt,
+    Value<int>? progress,
   }) {
     return HabitLogsCompanion(
       id: id ?? this.id,
@@ -1985,6 +2226,7 @@ class HabitLogsCompanion extends UpdateCompanion<HabitLog> {
       date: date ?? this.date,
       status: status ?? this.status,
       completedAt: completedAt ?? this.completedAt,
+      progress: progress ?? this.progress,
     );
   }
 
@@ -2008,6 +2250,9 @@ class HabitLogsCompanion extends UpdateCompanion<HabitLog> {
     if (completedAt.present) {
       map['completed_at'] = Variable<DateTime>(completedAt.value);
     }
+    if (progress.present) {
+      map['progress'] = Variable<int>(progress.value);
+    }
     return map;
   }
 
@@ -2018,7 +2263,8 @@ class HabitLogsCompanion extends UpdateCompanion<HabitLog> {
           ..write('habitId: $habitId, ')
           ..write('date: $date, ')
           ..write('status: $status, ')
-          ..write('completedAt: $completedAt')
+          ..write('completedAt: $completedAt, ')
+          ..write('progress: $progress')
           ..write(')'))
         .toString();
   }
@@ -3500,6 +3746,10 @@ typedef $$HabitsTableCreateCompanionBuilder = HabitsCompanion Function({
   required int scheduleTime,
   Value<RepeatPattern> repeatPattern,
   Value<bool> isActive,
+  Value<int?> weekday,
+  Value<int> targetCount,
+  Value<String?> unit,
+  Value<int?> endTime,
   required DateTime createdAt,
 });
 typedef $$HabitsTableUpdateCompanionBuilder = HabitsCompanion Function({
@@ -3508,6 +3758,10 @@ typedef $$HabitsTableUpdateCompanionBuilder = HabitsCompanion Function({
   Value<int> scheduleTime,
   Value<RepeatPattern> repeatPattern,
   Value<bool> isActive,
+  Value<int?> weekday,
+  Value<int> targetCount,
+  Value<String?> unit,
+  Value<int?> endTime,
   Value<DateTime> createdAt,
 });
 
@@ -3566,6 +3820,26 @@ class $$HabitsTableFilterComposer
 
   ColumnFilters<bool> get isActive => $composableBuilder(
     column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get weekday => $composableBuilder(
+    column: $table.weekday,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get targetCount => $composableBuilder(
+    column: $table.targetCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endTime => $composableBuilder(
+    column: $table.endTime,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3634,6 +3908,26 @@ class $$HabitsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get weekday => $composableBuilder(
+    column: $table.weekday,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get targetCount => $composableBuilder(
+    column: $table.targetCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endTime => $composableBuilder(
+    column: $table.endTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3668,6 +3962,20 @@ class $$HabitsTableAnnotationComposer
 
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<int> get weekday =>
+      $composableBuilder(column: $table.weekday, builder: (column) => column);
+
+  GeneratedColumn<int> get targetCount => $composableBuilder(
+    column: $table.targetCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<int> get endTime =>
+      $composableBuilder(column: $table.endTime, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -3731,6 +4039,10 @@ class $$HabitsTableTableManager
                 Value<int> scheduleTime = const Value.absent(),
                 Value<RepeatPattern> repeatPattern = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
+                Value<int?> weekday = const Value.absent(),
+                Value<int> targetCount = const Value.absent(),
+                Value<String?> unit = const Value.absent(),
+                Value<int?> endTime = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => HabitsCompanion(
                 id: id,
@@ -3738,6 +4050,10 @@ class $$HabitsTableTableManager
                 scheduleTime: scheduleTime,
                 repeatPattern: repeatPattern,
                 isActive: isActive,
+                weekday: weekday,
+                targetCount: targetCount,
+                unit: unit,
+                endTime: endTime,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -3747,6 +4063,10 @@ class $$HabitsTableTableManager
                 required int scheduleTime,
                 Value<RepeatPattern> repeatPattern = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
+                Value<int?> weekday = const Value.absent(),
+                Value<int> targetCount = const Value.absent(),
+                Value<String?> unit = const Value.absent(),
+                Value<int?> endTime = const Value.absent(),
                 required DateTime createdAt,
               }) => HabitsCompanion.insert(
                 id: id,
@@ -3754,6 +4074,10 @@ class $$HabitsTableTableManager
                 scheduleTime: scheduleTime,
                 repeatPattern: repeatPattern,
                 isActive: isActive,
+                weekday: weekday,
+                targetCount: targetCount,
+                unit: unit,
+                endTime: endTime,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
@@ -3810,6 +4134,7 @@ typedef $$HabitLogsTableCreateCompanionBuilder = HabitLogsCompanion Function({
   required String date,
   required EntryStatus status,
   Value<DateTime?> completedAt,
+  Value<int> progress,
 });
 typedef $$HabitLogsTableUpdateCompanionBuilder = HabitLogsCompanion Function({
   Value<int> id,
@@ -3817,6 +4142,7 @@ typedef $$HabitLogsTableUpdateCompanionBuilder = HabitLogsCompanion Function({
   Value<String> date,
   Value<EntryStatus> status,
   Value<DateTime?> completedAt,
+  Value<int> progress,
 });
 
 final class $$HabitLogsTableReferences
@@ -3868,6 +4194,11 @@ class $$HabitLogsTableFilterComposer
 
   ColumnFilters<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get progress => $composableBuilder(
+    column: $table.progress,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3924,6 +4255,11 @@ class $$HabitLogsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get progress => $composableBuilder(
+    column: $table.progress,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$HabitsTableOrderingComposer get habitId {
     final $$HabitsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -3970,6 +4306,9 @@ class $$HabitLogsTableAnnotationComposer
     column: $table.completedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get progress =>
+      $composableBuilder(column: $table.progress, builder: (column) => column);
 
   $$HabitsTableAnnotationComposer get habitId {
     final $$HabitsTableAnnotationComposer composer = $composerBuilder(
@@ -4028,12 +4367,14 @@ class $$HabitLogsTableTableManager
                 Value<String> date = const Value.absent(),
                 Value<EntryStatus> status = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
+                Value<int> progress = const Value.absent(),
               }) => HabitLogsCompanion(
                 id: id,
                 habitId: habitId,
                 date: date,
                 status: status,
                 completedAt: completedAt,
+                progress: progress,
               ),
           createCompanionCallback:
               ({
@@ -4042,12 +4383,14 @@ class $$HabitLogsTableTableManager
                 required String date,
                 required EntryStatus status,
                 Value<DateTime?> completedAt = const Value.absent(),
+                Value<int> progress = const Value.absent(),
               }) => HabitLogsCompanion.insert(
                 id: id,
                 habitId: habitId,
                 date: date,
                 status: status,
                 completedAt: completedAt,
+                progress: progress,
               ),
           withReferenceMapper: (p0) => p0
               .map(

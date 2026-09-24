@@ -2,7 +2,7 @@ enum Personality { relaxed, strict }
 
 enum EntryStatus { pending, completed, skipped }
 
-enum RepeatPattern { daily }
+enum RepeatPattern { daily, weekly }
 
 String normalize(String value) =>
     value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');

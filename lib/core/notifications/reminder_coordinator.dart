@@ -1,4 +1,4 @@
-import 'package:timezone/timezone.dart' as tz;
+import 'habit_alarm_planner.dart';
 
 import '../../features/reminders/reminder_repository.dart';
 import '../../features/habits/habit_repository.dart';
@@ -62,26 +62,15 @@ class ReminderCoordinator {
   }
 
   Future<void> scheduleHabit(Habit habit, Personality personality) async {
-    final id = ReminderSchedulePolicy.habitId(habit.id);
-    await gateway.cancel(id);
-    if (!habit.isActive) return;
-    final now = tz.TZDateTime.from(clock(), tz.local);
-    final today = await habits.logFor(habit.id, now);
-    final next = habitPolicy.next(
-      now: now,
-      minutes: habit.scheduleTime,
-      skipToday: today != null && today.status != EntryStatus.pending,
-    );
-    await gateway.schedule(
-      Alarm(
-        id: id,
-        title: habit.title,
-        body: ResponseTemplates(personality).reminder(habit.title),
-        at: next,
-        payload: 'habit:${habit.id}',
-        daily: true,
-      ),
-    );
+    await gateway.cancelHabit(habit.id);
+    for (final alarm in HabitAlarmPlanner().plan(
+      habit,
+      await habits.logsFor(habit.id),
+      clock(),
+      personality,
+    )) {
+      await gateway.schedule(alarm);
+    }
   }
 
   Future<void> reconcile() async {
@@ -120,7 +109,7 @@ class ReminderCoordinator {
   Future<void> notificationAction(String? payload, String? action) async {
     if (payload == null || !['done', 'skip', 'snooze'].contains(action)) return;
     final parts = payload.split(':');
-    if (parts.length != 2) return;
+    if (parts.length < 2 || parts.length > 4) return;
     final id = int.tryParse(parts[1]);
     if (id == null) return;
     if (parts[0] == 'reminder') await reminderAction(id, action!);
@@ -129,16 +118,43 @@ class ReminderCoordinator {
       if (habit == null) return;
       final now = clock();
       // A daily alarm represents the most recent scheduled local day.
-      final day = DateTime(
+      var day = DateTime(
         now.year,
         now.month,
-        now.day - (now.hour * 60 + now.minute < habit.scheduleTime ? 1 : 0),
+        now.day -
+            (now.hour * 60 + now.minute <
+                    (parts.length >= 3
+                        ? int.tryParse(parts[2]) ?? habit.scheduleTime
+                        : habit.scheduleTime)
+                ? 1
+                : 0),
       );
-      await habitAction(
-        id,
-        day,
-        action == 'done' ? EntryStatus.completed : EntryStatus.skipped,
-      );
+      if (parts.length == 4) {
+        final explicit = DateTime.tryParse(parts[3]);
+        if (explicit == null || explicit.isAfter(now)) return;
+        day = explicit;
+      } else if (habit.weekday != null) {
+        day = DateTime(
+          day.year,
+          day.month,
+          day.day - (day.weekday - habit.weekday! + 7) % 7,
+        );
+      }
+      if (action == 'done' && habit.targetCount > 1) {
+        final log = await habits.logFor(id, day);
+        if (log?.status == EntryStatus.skipped ||
+            log?.status == EntryStatus.completed) {
+          return;
+        }
+        await habits.increment(id, day, 1);
+        await scheduleHabit((await habits.get(id))!, await settings.get());
+      } else {
+        await habitAction(
+          id,
+          day,
+          action == 'done' ? EntryStatus.completed : EntryStatus.skipped,
+        );
+      }
     }
   }
 }

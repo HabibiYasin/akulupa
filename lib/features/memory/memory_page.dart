@@ -5,6 +5,7 @@ import '../../core/utils/dates.dart';
 import '../../shared/providers.dart';
 import '../../shared/widgets.dart';
 import 'item_repository.dart';
+import 'memory_photo.dart';
 
 class MemoryTile extends StatelessWidget {
   const MemoryTile({super.key, required this.memory, required this.now});
@@ -14,14 +15,16 @@ class MemoryTile extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     child: ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      leading: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: mint,
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: const Icon(Icons.inventory_2_outlined, color: ink),
-      ),
+      leading: memory.latest.photoPath != null
+          ? MemoryPhoto(path: memory.latest.photoPath!, thumbnail: true)
+          : Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: mint,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: const Icon(Icons.inventory_2_outlined, color: ink),
+            ),
       title: Text(
         memory.item.name,
         style: const TextStyle(fontWeight: FontWeight.w600),
@@ -51,7 +54,7 @@ class MemoryTile extends StatelessWidget {
                   memory.item.name,
                   '${memory.locations.length} catatan lokasi · terbaru di atas',
                 ),
-                for (var i = 0; i < memory.locations.length; i++)
+                for (var i = 0; i < memory.locations.length; i++) ...[
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: Icon(
@@ -63,6 +66,12 @@ class MemoryTile extends StatelessWidget {
                       '${i == 0 ? 'Lokasi terbaru · ' : ''}${dateTimeText(memory.locations[i].createdAt)}',
                     ),
                   ),
+                  if (memory.locations[i].photoPath != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: MemoryPhoto(path: memory.locations[i].photoPath!),
+                    ),
+                ],
               ],
             ),
           ),

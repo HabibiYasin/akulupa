@@ -4,12 +4,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app_services.dart';
 import '../../core/parser/command_parser.dart';
 import '../../core/utils/dates.dart';
+import '../../core/photos/photo_service.dart';
 import '../../shared/providers.dart';
 import '../../shared/widgets.dart';
 
 class CommandConfirmation extends ConsumerStatefulWidget {
-  const CommandConfirmation({super.key, required this.command});
+  const CommandConfirmation({
+    super.key,
+    required this.command,
+    this.initialPhoto,
+  });
   final ParsedCommand command;
+  final PreparedPhoto? initialPhoto;
   @override
   ConsumerState<CommandConfirmation> createState() =>
       _CommandConfirmationState();
@@ -24,6 +30,12 @@ class _CommandConfirmationState extends ConsumerState<CommandConfirmation> {
     text: widget.command.location,
   );
   late DateTime? date = widget.command.date;
+  late int? weekday = widget.command.weekday;
+  late final target = TextEditingController(
+    text: '${widget.command.targetCount}',
+  );
+  late int endMinutes = widget.command.endMinutes ?? 1320;
+  bool get isCounted => isHabit && widget.command.targetCount > 1;
   late TimeOfDay? time = widget.command.timeMinutes == null
       ? null
       : TimeOfDay(
@@ -32,6 +44,27 @@ class _CommandConfirmationState extends ConsumerState<CommandConfirmation> {
         );
   bool important = false;
   bool saving = false;
+  bool picking = false;
+  late PreparedPhoto? photo = widget.initialPhoto;
+  Future<void> pickPhoto(PhotoSource source) async {
+    setState(() {
+      picking = true;
+      error = null;
+    });
+    try {
+      final selected = await ref.read(servicesProvider).photos.pick(source);
+      if (selected != null && mounted) setState(() => photo = selected);
+    } catch (e) {
+      if (mounted) {
+        setState(
+          () => error = e is FormatException ? e.message : 'Foto belum bisa dibuka. Periksa izin kamera atau pilih foto lain dari galeri.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => picking = false);
+    }
+  }
+
   String? error;
   bool get isLocation =>
       widget.command.intent == CommandIntent.saveItemLocation;
@@ -41,10 +74,12 @@ class _CommandConfirmationState extends ConsumerState<CommandConfirmation> {
   void dispose() {
     title.dispose();
     location.dispose();
+    target.dispose();
     super.dispose();
   }
 
   Future<void> save() async {
+    if (picking || saving) return;
     if (!formKey.currentState!.validate()) return;
     DateTime? at;
     if (!isLocation) {
@@ -54,6 +89,10 @@ class _CommandConfirmationState extends ConsumerState<CommandConfirmation> {
       }
       final day = date ?? DateTime.now();
       at = DateTime(day.year, day.month, day.day, time!.hour, time!.minute);
+      if (isCounted && endMinutes <= time!.hour * 60 + time!.minute) {
+        setState(() => error = 'Jam akhir harus sesudah jam mulai.');
+        return;
+      }
       if (isReminder && !at.isAfter(DateTime.now())) {
         setState(
           () => error = 'Waktu pengingat sudah lewat. Pilih waktu berikutnya.',
@@ -83,6 +122,11 @@ class _CommandConfirmationState extends ConsumerState<CommandConfirmation> {
               at: at,
               minutes: time == null ? null : time!.hour * 60 + time!.minute,
               important: important,
+              weekday: weekday,
+              targetCount: isCounted ? int.parse(target.text) : 1,
+              unit: isCounted ? widget.command.unit : null,
+              endMinutes: isCounted ? endMinutes : null,
+              photo: photo,
             ),
           );
       if (mounted) Navigator.pop(context, result);
@@ -98,7 +142,7 @@ class _CommandConfirmationState extends ConsumerState<CommandConfirmation> {
 
   @override
   Widget build(BuildContext context) => PopScope(
-    canPop: !saving,
+    canPop: !saving && !picking,
     child: Padding(
       padding: EdgeInsets.fromLTRB(
         24,
@@ -167,6 +211,63 @@ class _CommandConfirmationState extends ConsumerState<CommandConfirmation> {
                       ? 'Lokasi wajib diisi'
                       : null,
                 ),
+              if (isLocation) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: saving || picking
+                          ? null
+                          : () => pickPhoto(PhotoSource.camera),
+                      icon: const Icon(Icons.camera_alt_outlined),
+                      label: const Text('Kamera'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: saving || picking
+                          ? null
+                          : () => pickPhoto(PhotoSource.gallery),
+                      icon: const Icon(Icons.photo_library_outlined),
+                      label: const Text('Galeri'),
+                    ),
+                  ],
+                ),
+                if (picking)
+                  const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: LinearProgressIndicator(),
+                  ),
+                if (photo != null) ...[
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.memory(
+                      photo!.bytes,
+                      height: 180,
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, _, _) => const Text(
+                        'Pratinjau foto tidak tersedia. Pilih ulang foto.',
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Foto ${photo!.kilobytes} KB · siap disimpan',
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: saving || picking
+                            ? null
+                            : () => setState(() => photo = null),
+                        child: const Text('Hapus foto'),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
               if (!isLocation)
                 Wrap(
                   spacing: 10,
@@ -222,14 +323,84 @@ class _CommandConfirmationState extends ConsumerState<CommandConfirmation> {
                     ),
                   ],
                 ),
-              if (isHabit)
+              if (isHabit) ...[
+                const SizedBox(height: 14),
+                DropdownButtonFormField<int>(
+                  initialValue: weekday ?? 0,
+                  decoration: const InputDecoration(labelText: 'Ulangi'),
+                  items: [
+                    const DropdownMenuItem(
+                      value: 0,
+                      child: Text('Setiap hari'),
+                    ),
+                    for (var i = 0; i < 7; i++)
+                      DropdownMenuItem(
+                        value: i + 1,
+                        child: Text(
+                          'Setiap ${const ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][i]}',
+                        ),
+                      ),
+                  ],
+                  onChanged: saving
+                      ? null
+                      : (value) =>
+                            setState(() => weekday = value == 0 ? null : value),
+                ),
+                if (isCounted) ...[
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: target,
+                    enabled: !saving,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Target ${widget.command.unit} per hari',
+                    ),
+                    validator: (value) {
+                      final count = int.tryParse(value ?? '');
+                      return count == null || count < 2 || count > 24
+                          ? 'Isi target 2–24'
+                          : null;
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Jam di atas adalah awal pengingat. Pengingat dibagi rata hingga jam akhir dan berhenti hari ini setelah target selesai.',
+                    style: TextStyle(color: muted),
+                  ),
+                  OutlinedButton(
+                    onPressed: saving
+                        ? null
+                        : () async {
+                            final value = await showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay(
+                                hour: endMinutes ~/ 60,
+                                minute: endMinutes % 60,
+                              ),
+                              builder: (context, child) => MediaQuery(
+                                data: MediaQuery.of(context)
+                                    .copyWith(alwaysUse24HourFormat: true),
+                                child: child!,
+                              ),
+                            );
+                            if (value != null && mounted) {
+                              setState(
+                                () =>
+                                    endMinutes = value.hour * 60 + value.minute,
+                              );
+                            }
+                          },
+                    child: Text('Jam akhir ${minutesText(endMinutes)}'),
+                  ),
+                ],
                 const Padding(
-                  padding: EdgeInsets.only(top: 14),
+                  padding: EdgeInsets.only(top: 8),
                   child: Text(
-                    'Berulang setiap hari · mulai pada jadwal berikutnya',
+                    'Mulai pada jadwal berikutnya.',
                     style: TextStyle(color: muted),
                   ),
                 ),
+              ],
               if (isReminder)
                 SwitchListTile.adaptive(
                   contentPadding: EdgeInsets.zero,
@@ -257,7 +428,9 @@ class _CommandConfirmationState extends ConsumerState<CommandConfirmation> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: saving ? null : () => Navigator.pop(context),
+                      onPressed: saving || picking
+                          ? null
+                          : () => Navigator.pop(context),
                       child: const Text('Batal'),
                     ),
                   ),
@@ -265,7 +438,7 @@ class _CommandConfirmationState extends ConsumerState<CommandConfirmation> {
                   Expanded(
                     flex: 2,
                     child: FilledButton.icon(
-                      onPressed: saving ? null : save,
+                      onPressed: saving || picking ? null : save,
                       icon: saving
                           ? const SizedBox(
                               width: 18,

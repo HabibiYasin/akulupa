@@ -20,9 +20,30 @@ class HabitRepository {
       (db.select(db.habitLogs)
             ..where((t) => t.habitId.equals(id) & t.date.equals(dayKey(day))))
           .getSingleOrNull();
-  Future<Habit> create(String title, int minutes) {
+  Future<List<HabitLog>> logsFor(int id) =>
+      (db.select(db.habitLogs)..where((t) => t.habitId.equals(id))).get();
+
+  Future<Habit> create(
+    String title,
+    int minutes, {
+    int? weekday,
+    int targetCount = 1,
+    String? unit,
+    int? endMinutes,
+  }) {
     if (title.trim().isEmpty || minutes < 0 || minutes > 1439) {
       throw ArgumentError('Rutinitas tidak valid.');
+    }
+    if ((weekday != null && (weekday < 1 || weekday > 7)) ||
+        targetCount < 1 ||
+        targetCount > 24 ||
+        (targetCount > 1 &&
+            (unit == null ||
+                unit.trim().isEmpty ||
+                endMinutes == null ||
+                endMinutes <= minutes ||
+                endMinutes > 1439))) {
+      throw ArgumentError('Periksa hari, target, dan rentang waktu rutinitas.');
     }
     return db
         .into(db.habits)
@@ -30,6 +51,13 @@ class HabitRepository {
           HabitsCompanion.insert(
             title: title.trim(),
             scheduleTime: minutes,
+            weekday: Value(weekday),
+            repeatPattern: Value(
+              weekday == null ? RepeatPattern.daily : RepeatPattern.weekly,
+            ),
+            targetCount: Value(targetCount),
+            unit: Value(unit),
+            endTime: Value(endMinutes),
             createdAt: DateTime.now(),
           ),
         );
@@ -42,6 +70,11 @@ class HabitRepository {
   }
 
   Future<void> mark(int id, DateTime day, EntryStatus status) async {
+    final habit = await get(id);
+    if (habit == null ||
+        (habit.weekday != null && habit.weekday != day.weekday)) {
+      throw ArgumentError('Hari ini bukan jadwal rutinitas tersebut.');
+    }
     await db
         .into(db.habitLogs)
         .insert(
@@ -49,6 +82,9 @@ class HabitRepository {
             habitId: id,
             date: dayKey(day),
             status: status,
+            progress: Value(
+              status == EntryStatus.completed ? habit.targetCount : 0,
+            ),
             completedAt: Value(
               status == EntryStatus.completed ? DateTime.now() : null,
             ),
@@ -56,6 +92,9 @@ class HabitRepository {
           onConflict: DoUpdate(
             (_) => HabitLogsCompanion(
               status: Value(status),
+              progress: Value(
+                status == EntryStatus.completed ? habit.targetCount : 0,
+              ),
               completedAt: Value(
                 status == EntryStatus.completed ? DateTime.now() : null,
               ),
@@ -64,4 +103,48 @@ class HabitRepository {
           ),
         );
   }
+
+  Future<int> increment(int id, DateTime day, int amount) =>
+      db.transaction(() async {
+        final habit = await get(id);
+        if (habit == null ||
+            !habit.isActive ||
+            habit.targetCount <= 1 ||
+            amount < 1 ||
+            (habit.weekday != null && habit.weekday != day.weekday)) {
+          throw ArgumentError(
+            'Rutinitas bertarget tidak tersedia pada tanggal ini.',
+          );
+        }
+        final log = await logFor(id, day);
+        if (log?.status == EntryStatus.skipped) {
+          throw StateError('Rutinitas hari ini sudah dilewati.');
+        }
+        final progress = ((log?.progress ?? 0) + amount).clamp(
+          0,
+          habit.targetCount,
+        );
+        final status = progress == habit.targetCount
+            ? EntryStatus.completed
+            : EntryStatus.pending;
+        final row = HabitLogsCompanion.insert(
+          habitId: id,
+          date: dayKey(day),
+          status: status,
+          progress: Value(progress),
+          completedAt: Value(
+            status == EntryStatus.completed ? DateTime.now() : null,
+          ),
+        );
+        await db
+            .into(db.habitLogs)
+            .insert(
+              row,
+              onConflict: DoUpdate(
+                (_) => row,
+                target: [db.habitLogs.habitId, db.habitLogs.date],
+              ),
+            );
+        return progress;
+      });
 }

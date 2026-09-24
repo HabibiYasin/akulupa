@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.2.0 — Phase 2 — 2026-09-24
+
+- Perbaikan lokasi dengan preposisi tergabung: “gelas diatas meja”, “kunci didalam tas”, dan variasi bawah/luar/depan/belakang/samping/sebelah/tengah. Pertanyaan serta negasi tetap tidak menjadi penyimpanan otomatis.
+
+- Mic Android dengan permintaan mode offline bahasa Indonesia, mulai/stop/batal, pesan izin/bahasa yang tidak tersedia, dan transkripsi yang bisa diedit sebelum diproses.
+- Kamera/galeri pada konfirmasi barang; JPEG maksimal 500 KB, tanpa EXIF, disimpan privat saat konfirmasi. Foto tetap mengikuti riwayat lokasi dan dapat diperbesar.
+- Pemulihan hasil picker yang tersedia setelah proses Android dihentikan, dengan pengisian ulang nama/lokasi.
+- Parser angka dikte pada jam dan jumlah gelas, termasuk setengah/lewat/kurang seperempat.
+- Tombol kategori Barang/Pengingat/Rutinitas/Aktivitas hanya mengganti placeholder contoh, tanpa menimpa teks pengguna.
+- Versi aplikasi 0.2.0+2; tag `v0.2.0` dan `phase-2`. Tag Phase 1 tidak dipindahkan.
+
+### Perbaikan perintah dan rutinitas dalam rilis ini
+
+- Lokasi barang: “ada di”, “berada di”, “disimpan di”, serta dipinjam/diambil/dikembalikan; pembaruan berdasarkan pilihan barang menjaga riwayat.
+- Rutinitas mingguan, usulan jam yang dapat diedit, target gelas harian dan rentang pengingat.
+- Pembatalan berdasarkan kata kunci/tanggal, skip satu tanggal, dan progres dengan konfirmasi catatan yang cocok.
+- Form manual ketika parser belum yakin, tanpa menyimpan otomatis.
+- Migrasi SQLite v1 ke v2 mempertahankan catatan lama.
+- Pengulangan Android mempertahankan tanggal mulai setelah skip/selesai. Dependency notifikasi dipatok 22.3.1.
+
+Tag Phase 1 yang sudah diterbitkan tetap menunjuk baseline semula.
+
 ## 0.1.0 — Phase 1 MVP — 2026-09-22
 
 Rilis awal Aku Lupa untuk Android, dengan penyimpanan lokal dan parser berbasis aturan tanpa backend atau API AI.
