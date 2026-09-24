@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:background="@drawable/widget_background" android:padding="18dp">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Aku Lupa" android:textColor="#D7E8C1" android:textSize="20sp" android:textStyle="bold" />
+    <TextView android:id="@+id/widget_date" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:textSize="12sp" />
+    <TextView android:id="@+id/widget_rows" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:gravity="center_vertical" android:textColor="#FFFFFF" android:textSize="14sp" android:maxLines="4" android:ellipsize="end" />
+    <TextView android:id="@+id/widget_footer" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#DFBD70" android:textSize="11sp" />
+</LinearLayout>

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const ink = Color(0xFF183E36);
@@ -18,9 +19,16 @@ Future<void> runAction(
 ) async {
   try {
     await action();
-  } catch (_) {
+  } catch (error) {
     if (context.mounted) {
-      showMessage(context, 'Perubahan belum tersimpan. Silakan coba lagi.');
+      showMessage(
+        context,
+        error is PlatformException
+            ? error.message ?? 'Tindakan Android belum berhasil. Coba lagi.'
+            : error is StateError
+            ? error.message.toString()
+            : 'Perubahan belum tersimpan. Silakan coba lagi.',
+      );
     }
   }
 }

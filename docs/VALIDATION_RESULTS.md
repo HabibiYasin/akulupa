@@ -1,5 +1,17 @@
 # Hasil verifikasi
 
+## Phase 3 — 24 September 2026
+
+- `flutter analyze`: bersih. `flutter test`: **211 tes lulus**. `flutter build apk --debug`: berhasil, versi **0.3.0+3**.
+- Tes tambahan: round trip seluruh tabel/foto/progres, lokasi hasil restore dijeda, tautan kalender dibersihkan, penolakan tabel hilang/relasi rusak/enum salah/koordinat invalid/referensi foto hilang/kolom tak dikenal/file melebihi 32 MB, rollback transaksi beserta pembersihan foto baru, dan migrasi v2→v3.
+- Bridge Calendar diuji untuk judul dan waktu epoch. Service lokasi diuji untuk penolakan izin tanpa mengaktifkan catatan, event sekali kirim, pengaktifan ulang, dan registrasi ulang setelah pemulihan gagal. Snapshot widget diuji terhadap snooze, rutinitas mingguan, dan log dilewati.
+- Emulator Android API 37: ekspor JSON melalui pemilih file Android berhasil, 188.672 byte dengan 10 catatan dan 1 foto. Ditemukan process death karena low memory saat picker terbuka, lalu diperbaiki dengan penyimpanan status operasi native. Uji ulang dengan `am kill` saat picker terbuka tetap menyelesaikan ekspor ketika kembali; JSON berhasil dibaca dan schema=3. Import setelah process death meminta pemilihan ulang, tanpa memulihkan data diam-diam.
+- Emulator: memilih cadangan membuka preview tanggal/jumlah dan konfirmasi penggantian. Konfirmasi **Ganti & pulihkan** berhasil melalui SQLite Android nyata. [Bukti hasil pemulihan](phase3-restore-emulator.png).
+- Emulator: request pin widget membuka konfirmasi launcher; widget terpasang dan menampilkan tanggal lokal serta rutinitas minum air 0/10. Mengetuknya membuka aplikasi. [Bukti widget](phase3-widget-emulator.png).
+- Emulator: **Gunakan lokasi saya sekarang** membuka izin lokasi Android. Menolak izin menampilkan pesan agar mengizinkan lokasi presisi dan form tetap dapat dibatalkan; tidak ada catatan lokasi yang dibuat. Emulator tidak memiliki handler penambahan acara Kalender, sehingga penyimpanan acara belum diuji; aplikasi memberi arahan memasang/mengaktifkan Google Calendar bila tidak tersedia.
+- Belum diverifikasi: penyimpanan acara ke akun Google Calendar dan unggah/download provider Drive dengan akun, perjalanan geofence di HP fisik, ketahanan geofence saat reboot/battery saver OEM, dan widget saat pergantian hari/reboot. Tidak ada OAuth atau sinkronisasi Google otomatis; Calendar/Drive memakai aplikasi/pemilih file Android.
+- APK debug tersedia di `build/app/outputs/flutter-apk/app-debug.apk`. Petunjuk uji perangkat ada di [PHASE3_CHECKLIST.md](PHASE3_CHECKLIST.md). Baseline Phase 3 ditandai `v0.3.0` dan `phase-3`; tag Phase 1/2 tetap.
+
 ## Phase 2 — 23 September 2026
 
 Perbaikan berikutnya: “gelas diatas meja” kini langsung membuka preview berisi nama **gelas** dan lokasi **atas meja**. Ditambahkan 22 tes untuk preposisi tergabung, pertanyaan/negasi, dan preview UI; seluruh **196 tes lulus**, analyzer bersih. APK debug diperbarui.

@@ -83,6 +83,18 @@ class UserSettings extends Table {
   List<String> get customConstraints => ['CHECK (id = 1)'];
 }
 
+class PlaceReminders extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get title => text()();
+  TextColumn get placeName => text()();
+  RealColumn get latitude => real()();
+  RealColumn get longitude => real()();
+  IntColumn get radius => integer().withDefault(const Constant(200))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get triggeredAt => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+}
+
 @DriftDatabase(
   tables: [
     Items,
@@ -92,6 +104,7 @@ class UserSettings extends Table {
     HabitLogs,
     ActivityLogs,
     UserSettings,
+    PlaceReminders,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -99,7 +112,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -115,6 +128,7 @@ class AppDatabase extends _$AppDatabase {
           "UPDATE habit_logs SET progress = 1 WHERE status = 'completed'",
         );
       }
+      if (from < 3) await m.createTable(placeReminders);
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');

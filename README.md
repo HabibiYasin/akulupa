@@ -1,8 +1,19 @@
 # Aku Lupa
 
-Asisten ingatan pribadi untuk Android. Ketik perintah bahasa Indonesia, periksa hasilnya, lalu simpan. Seluruh data dan pemrosesan berada di perangkat; tidak ada akun, backend, API AI, atau layanan berbayar.
+Asisten ingatan pribadi untuk Android. Ketik perintah bahasa Indonesia, periksa hasilnya, lalu simpan. Catatan dan parser utama berada di perangkat; tidak ada backend atau API AI berbayar. Integrasi Android dan penyedia Google dijalankan melalui pilihan pengguna.
 
-Versi **0.2.0 — Phase 2**. Riwayat fitur dan batas rilis tersedia di [CHANGELOG.md](CHANGELOG.md). Tag `v0.2.0` dan `phase-2` menandai baseline fase 2; tag `v0.1.0` dan `phase-1` tetap menunjuk baseline fase 1.
+Versi **0.3.0 — Phase 3**. Riwayat fitur dan batas rilis tersedia di [CHANGELOG.md](CHANGELOG.md). Tag `v0.3.0` dan `phase-3` menandai baseline fase 3. Tag `v0.2.0`/`phase-2` dan `v0.1.0`/`phase-1` tetap menunjuk baseline sebelumnya.
+
+## Fase 3: integrasi Android
+
+- **Kalender:** menu pengingat → **Buka di Kalender…** membuka editor kalender Android dengan judul dan waktu. Pilih akun Google lalu simpan sendiri. Durasi awal satu jam dapat diedit. Membuka atau membatalkan editor tidak dianggap berhasil menyimpan acara. Ini ekspor manual, bukan sinkronisasi dua arah/OAuth; perubahan/pembatalan sesudah ekspor dilakukan terpisah di kedua aplikasi.
+- **Cadangan:** Pengaturan → **Cadangan & pemulihan** → **Buat cadangan**. Pemilih file Android menawarkan perangkat atau Google Drive jika penyedianya tersedia. Drive membutuhkan aplikasi/akun/koneksi milik penyedia; jika tidak muncul, simpan lokal dan unggah melalui Drive. Tidak ada pencadangan cloud otomatis.
+- Cadangan JSON maksimal 32 MB mencakup seluruh catatan, pengaturan, dan foto. Snapshot dibaca dalam transaksi SQLite; database WAL aktif tidak disalin mentah. Pemulihan memvalidasi format, schema, relasi, enum, jadwal, koordinat, dan referensi foto dalam database sementara sebelum meminta konfirmasi mengganti catatan. Foto baru disiapkan sebelum transaksi; kegagalan transaksi mempertahankan catatan lama dan membersihkan foto baru. Pengingat waktu direkonsiliasi, tautan kalender dibersihkan, dan pengingat lokasi hasil restore dijeda.
+- **Widget:** Pengaturan → **Tambahkan widget jadwal**, atau tekan lama layar utama → Widget → Aku Lupa. Menampilkan tiga pengingat/rutinitas hari ini yang belum selesai dan jumlah sisanya. Mengetuk widget membuka aplikasi. Data diperbarui setelah perubahan database; tanggal lokal dihitung kembali oleh Android saat pembaruan widget (interval sistem sekitar 30 menit). Launcher/baterai dapat menunda pembaruan.
+- **Lokasi:** Jadwal → **Pengingat saat tiba di lokasi**. Isi kegiatan, label tempat, koordinat dari lokasi saat ini atau aplikasi peta, dan radius 100–2000 m. Lokasi baru disimpan dijeda; aktifkan sakelarnya setelah izin presisi, **Sepanjang waktu**, notifikasi, GPS, dan Google Play Services tersedia. Maksimal 100 aktif. Pengingat sekali saat memasuki area, dapat diaktifkan ulang. Tidak memicu langsung ketika disimpan di dalam area; keluar lalu masuk kembali. Receiver Android menangani geofence saat aplikasi tertutup serta mendaftarkan ulang saat reboot/update; force-stop memerlukan membuka ulang aplikasi. Geofence bukan alarm waktu presisi dan bisa terlambat beberapa menit.
+- File cadangan memuat data pribadi tanpa enkripsi. Lokasi tujuan disimpan di perangkat dan didaftarkan ke layanan lokasi Google Play Services; tidak ada backend Aku Lupa. Pemilih file/kalender hanya menerima data ketika pengguna menjalankan tindakan tersebut.
+
+Panduan pemeriksaan: [docs/PHASE3_CHECKLIST.md](docs/PHASE3_CHECKLIST.md). Referensi Android: [Storage Access Framework](https://developer.android.com/training/data-storage/shared/documents-files), [calendar insert intent](https://developer.android.com/guide/components/intents-common#Calendar), [app widgets](https://developer.android.com/develop/ui/views/appwidgets), [geofencing](https://developer.android.com/develop/sensors-and-location/location/geofencing).
 
 ## Fase 2: suara dan foto
 
@@ -84,7 +95,7 @@ Parser mendukung jam/pukul, HH:mm/HH.mm, pagi/siang/sore/malam, hari ini/besok/l
 
 Pembatalan, skip, progres, dan status barang menampilkan catatan yang cocok sebelum diterapkan. Jika cocok dengan beberapa rutinitas/barang, pilih satu; pembatalan pengingat bisa memilih beberapa. Pengingat yang dibatalkan disimpan sebagai riwayat dilewati. Skip rutinitas mendukung hari ini hingga 31 hari ke depan dan tidak mematikan pengulangan berikutnya. Target gelas dibagi rata sepanjang rentang waktu pilihan; mencapai target menghentikan alarm hari itu dan hari berikutnya dimulai dari nol. Angka target berasal dari input pengguna.
 
-Schema v2 dimigrasikan dari v1 tanpa menghapus data. Adapter `android_recurrence.dart` mempertahankan tanggal mulai pengulangan setelah skip/selesai melalui field kalender native plugin. Dependency notifikasi dipatok 22.3.1 karena API pencocokan jam/hari mengabaikan tanggal mulai; periksa kontrak native dan tes penjadwalan sebelum upgrade.
+Schema v3 dimigrasikan dari v1/v2 tanpa menghapus data. Adapter `android_recurrence.dart` mempertahankan tanggal mulai pengulangan setelah skip/selesai melalui field kalender native plugin. Dependency notifikasi dipatok 22.3.1 karena API pencocokan jam/hari mengabaikan tanggal mulai; periksa kontrak native dan tes penjadwalan sebelum upgrade.
 
 Pengingat tidak harus diawali “ingatkan”: kegiatan dengan petunjuk hari/jam otomatis masuk preview. Alias “ingetin”, “ingatin”, “jangan lupa”, dan “jadwalkan” juga didukung. “Jumat ini” berarti Jumat pada pekan Senin–Minggu saat ini; hari yang sudah lewat tidak diam-diam digeser. “Jumat depan” memakai pekan berikutnya dengan catatan di preview. Nama hari tanpa “ini/depan” memakai hari terdekat mulai hari ini. “Minggu depan” tanpa hari tertentu, tanggal/hari yang bertentangan, dan waktu yang belum lengkap meminta pilihan manual. “Aku mau ke psikiater” membuka form dengan tanggal dan jam kosong. Pertanyaan dan pembatalan tidak otomatis membuat reminder. Parsing tetap memakai aturan lokal, tanpa AI/API eksternal.
 
@@ -113,7 +124,8 @@ lib/
       schedule_policy.dart          # aturan murni Galak/habit/tunda
       reminder_coordinator.dart     # DB → jadwal native
     utils/dates.dart
-    backup/backup_service.dart       # kontrak dan dummy eksplisit
+    backup/                         # snapshot JSON, validasi, restore atomik
+    platform/                       # bridge Android dan snapshot widget
     speech/speech_service.dart      # pengenal suara Android dan kontrak test
     photos/photo_service.dart      # picker, kompresi, penyimpanan foto privat
   features/
@@ -125,7 +137,7 @@ lib/
     settings/                       # personality dan izin
   shared/                           # providers dan widget reusable
 test/                               # parser, scheduling, DB, UI
-drift_schemas/                      # snapshot schema v1 dan v2
+drift_schemas/                      # snapshot schema v1, v2, dan v3
 docs/                               # verifikasi Android
 ```
 
@@ -147,7 +159,7 @@ Drift + SQLite dipilih karena relasi barang-lokasi dan habit-log membutuhkan tra
 
 Versi tersimpan dalam `pubspec.lock`. Tidak ada package AI.
 
-### Schema v2
+### Schema v3
 
 | Tabel | Kolom |
 |---|---|
@@ -158,8 +170,9 @@ Versi tersimpan dalam `pubspec.lock`. Tidak ada package AI.
 | HabitLogs | id, habitId FK, date YYYY-MM-DD lokal, status, progress, completedAt?; unik habitId+date |
 | ActivityLogs | id, title, description?, eventTime, createdAt |
 | UserSettings | singleton id=1, personality |
+| PlaceReminders | id, title, placeName, latitude, longitude, radius, isActive, triggeredAt?, createdAt |
 
-`schemaVersion=2` menambahkan hari mingguan dan target/progres melalui migrasi v1 tanpa menghapus catatan lama. Foto menggunakan kolom `photoPath` yang sudah ada. Reminder disimpan sebagai instant; habit sebagai jam dinding lokal. `drift_flutter` menyimpan SQLite di direktori privat aplikasi. Upgrade berikutnya harus memiliki migrasi dan tes kompatibilitas tersendiri.
+`schemaVersion=3` menambahkan pengingat lokasi setelah migrasi v2 yang menambahkan hari mingguan serta target/progres; catatan lama dipertahankan. Foto menggunakan kolom `photoPath` yang sudah ada. Reminder disimpan sebagai instant; habit sebagai jam dinding lokal. `drift_flutter` menyimpan SQLite di direktori privat aplikasi. Upgrade berikutnya harus memiliki migrasi dan tes kompatibilitas tersendiri.
 
 ## Notifikasi dan batas keandalan
 
@@ -177,10 +190,9 @@ Jika penjadwalan gagal setelah penulisan berhasil, data tetap tersimpan dan bann
 
 ## Belum diimplementasikan
 
-- Google Drive, Calendar, widget Android, reminder lokasi, pengulangan bulanan, editor umum semua catatan, dan backup/restore nyata. Pembatalan pengingat serta pembaruan status barang tersedia melalui command.
-- `calendarEventId` menyiapkan integrasi Calendar fase 3. Foto tidak menjalankan OCR/pengenalan objek; nama dan lokasi tetap diisi pengguna.
-- `BackupService`/`LocalBackupService` adalah **dummy** (`available: false`). Implementasi berikutnya perlu snapshot SQLite konsisten, manifest foto, dan restore atomik; jangan menyalin DB aktif tanpa memperhatikan WAL.
-- Auto-backup Android dimatikan. Uninstall/clear data menghapus catatan dan belum ada pemulihan.
+- OAuth Google, sinkronisasi dua arah Calendar, cadangan Drive otomatis, pengulangan bulanan, dan editor umum semua catatan. Calendar dan Drive saat ini melalui aplikasi/pemilih file Android.
+- `calendarEventId` tetap dicadangkan untuk sinkronisasi masa depan; ekspor editor Kalender tidak menghasilkan ID acara yang terverifikasi. Foto tidak menjalankan OCR/pengenalan objek.
+- Auto-backup Android dimatikan. Uninstall/clear data menghapus catatan; pulihkan melalui file cadangan manual yang sudah disimpan sebelumnya.
 - Pencarian/timeline MVP memuat seluruh catatan; indeks/pagination/FTS dapat ditambahkan jika volume membesar.
 
 ## Pengujian

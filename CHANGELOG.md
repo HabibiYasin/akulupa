@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0 — Phase 3 — 2026-09-24
+
+- Ekspor pengingat melalui editor Kalender Android, dengan pilihan akun di aplikasi tujuan.
+- Cadangan/pemulihan JSON beserta foto melalui Storage Access Framework; Drive tersedia jika provider Android terpasang. Validasi sebelum konfirmasi penggantian dan transaksi restore atomik; batas 32 MB.
+- Widget Android menampilkan pengingat dan rutinitas hari ini, mengikuti perubahan data, status, snooze, serta tanggal lokal.
+- Pengingat memasuki lokasi dengan geofence Google Play Services, radius 100–2000 m, izin eksplisit, jeda/aktifkan ulang, status sekali kirim, serta registrasi ulang setelah reboot.
+- Schema v3 menambah PlaceReminders dan mempertahankan data v1/v2. Hasil restore menjeda lokasi dan menjadwalkan ulang alarm waktu.
+- Integrasi Google masih manual lewat aplikasi Android; OAuth, sinkronisasi Calendar dua arah, dan backup Drive otomatis belum tersedia.
+- Versi 0.3.0+3; tag `v0.3.0` dan `phase-3`. Tag fase sebelumnya tidak dipindahkan.
+
 ## 0.2.0 — Phase 2 — 2026-09-24
 
 - Perbaikan lokasi dengan preposisi tergabung: “gelas diatas meja”, “kunci didalam tas”, dan variasi bawah/luar/depan/belakang/samping/sebelah/tengah. Pertanyaan serta negasi tetap tidak menjadi penyimpanan otomatis.

@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models.dart';
 import '../../shared/providers.dart';
 import '../../shared/widgets.dart';
+import 'backup_page.dart';
+import '../places/places_page.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -111,11 +113,36 @@ class SettingsPage extends ConsumerWidget {
             style: TextStyle(color: muted, height: 1.6),
           ),
           const SectionTitle('Tentang ingatanmu'),
+          ListTile(
+            leading: const Icon(Icons.backup_outlined),
+            title: const Text('Cadangan & pemulihan'),
+            subtitle: const Text('File lokal atau Google Drive'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(builder: (_) => const BackupPage()),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.widgets_outlined),
+            title: const Text('Tambahkan widget jadwal'),
+            onTap: () => runAction(context, () async {
+              await services.widget.refresh();
+              await services.integrations.pinWidget();
+            }),
+          ),
+          ListTile(
+            leading: const Icon(Icons.location_on_outlined),
+            title: const Text('Pengingat lokasi'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(builder: (_) => const PlacesPage()),
+            ),
+          ),
           const Card(
             child: Padding(
               padding: EdgeInsets.all(20),
               child: Text(
-                'Catatan dan foto disimpan di perangkat ini. Input suara meminta mode offline bahasa Indonesia; ketersediaannya mengikuti pengenal suara HP. Hasil suara selalu dapat diperiksa sebelum disimpan.\n\nEkspor cadangan dan integrasi Google belum tersedia. Menghapus data aplikasi atau mencopot aplikasi akan menghapus catatan dan foto.',
+                'Catatan dan foto disimpan di perangkat ini. Input suara meminta mode offline bahasa Indonesia; ketersediaannya mengikuti pengenal suara HP. Hasil suara selalu dapat diperiksa sebelum disimpan.\n\nCadangan manual tersedia lewat pemilih file Android, termasuk Drive bila tersedia. Pengingat bisa dibuka di aplikasi Kalender untuk disimpan ke akun pilihanmu. Menghapus data aplikasi atau mencopot aplikasi akan menghapus catatan dan foto.',
                 style: TextStyle(height: 1.6),
               ),
             ),
@@ -123,7 +150,7 @@ class SettingsPage extends ConsumerWidget {
           const SizedBox(height: 16),
           const Center(
             child: Text(
-              'Aku Lupa · 0.2.0\nSedikit lupa, tetap tenang.',
+              'Aku Lupa · 0.3.0\nSedikit lupa, tetap tenang.',
               textAlign: TextAlign.center,
               style: TextStyle(color: muted, height: 1.8),
             ),

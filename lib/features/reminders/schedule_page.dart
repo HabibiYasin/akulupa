@@ -6,6 +6,7 @@ import '../../core/models.dart';
 import '../../core/utils/dates.dart';
 import '../../shared/providers.dart';
 import '../../shared/widgets.dart';
+import '../places/places_page.dart';
 
 class ReminderTile extends ConsumerWidget {
   const ReminderTile({super.key, required this.reminder});
@@ -52,9 +53,14 @@ class ReminderTile extends ConsumerWidget {
                 tooltip: 'Tindakan pengingat',
                 onSelected: (action) => runAction(
                   context,
-                  () => ref
-                      .read(servicesProvider)
-                      .reminderAction(reminder.id, action),
+                  () => action == 'calendar'
+                      ? ref
+                            .read(servicesProvider)
+                            .integrations
+                            .openCalendar(reminder.title, at)
+                      : ref
+                            .read(servicesProvider)
+                            .reminderAction(reminder.id, action),
                 ),
                 itemBuilder: (_) => const [
                   PopupMenuItem(value: 'done', child: Text('Sudah')),
@@ -63,6 +69,10 @@ class ReminderTile extends ConsumerWidget {
                     child: Text('Ingatkan lagi 10 menit'),
                   ),
                   PopupMenuItem(value: 'skip', child: Text('Lewati')),
+                  PopupMenuItem(
+                    value: 'calendar',
+                    child: Text('Buka di Kalender…'),
+                  ),
                 ],
               )
             : null,
@@ -260,6 +270,20 @@ class SchedulePage extends ConsumerWidget {
           'Pengingat dan kebiasaan kecil yang membuat hari lebih teratur.',
         ),
         const SectionTitle('Pengingat'),
+        OutlinedButton.icon(
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const PlacesPage()),
+          ),
+          icon: const Icon(Icons.location_on_outlined),
+          label: const Text('Pengingat saat tiba di lokasi'),
+        ),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 12),
+          child: Text(
+            'Untuk Google Calendar: buka menu pengingat → Buka di Kalender, pilih akun Google lalu simpan. Perubahan selanjutnya dikelola terpisah.',
+          ),
+        ),
         AsyncSection(
           value: ref.watch(remindersProvider),
           builder: (rows) => rows.isEmpty

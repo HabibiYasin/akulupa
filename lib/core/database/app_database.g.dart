@@ -2833,6 +2833,557 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
   }
 }
 
+class $PlaceRemindersTable extends PlaceReminders
+    with TableInfo<$PlaceRemindersTable, PlaceReminder> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlaceRemindersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _placeNameMeta = const VerificationMeta(
+    'placeName',
+  );
+  @override
+  late final GeneratedColumn<String> placeName = GeneratedColumn<String>(
+    'place_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _latitudeMeta = const VerificationMeta(
+    'latitude',
+  );
+  @override
+  late final GeneratedColumn<double> latitude = GeneratedColumn<double>(
+    'latitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _longitudeMeta = const VerificationMeta(
+    'longitude',
+  );
+  @override
+  late final GeneratedColumn<double> longitude = GeneratedColumn<double>(
+    'longitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _radiusMeta = const VerificationMeta('radius');
+  @override
+  late final GeneratedColumn<int> radius = GeneratedColumn<int>(
+    'radius',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(200),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _triggeredAtMeta = const VerificationMeta(
+    'triggeredAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> triggeredAt = GeneratedColumn<DateTime>(
+    'triggered_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    title,
+    placeName,
+    latitude,
+    longitude,
+    radius,
+    isActive,
+    triggeredAt,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'place_reminders';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PlaceReminder> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('place_name')) {
+      context.handle(
+        _placeNameMeta,
+        placeName.isAcceptableOrUnknown(data['place_name']!, _placeNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_placeNameMeta);
+    }
+    if (data.containsKey('latitude')) {
+      context.handle(
+        _latitudeMeta,
+        latitude.isAcceptableOrUnknown(data['latitude']!, _latitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latitudeMeta);
+    }
+    if (data.containsKey('longitude')) {
+      context.handle(
+        _longitudeMeta,
+        longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_longitudeMeta);
+    }
+    if (data.containsKey('radius')) {
+      context.handle(
+        _radiusMeta,
+        radius.isAcceptableOrUnknown(data['radius']!, _radiusMeta),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('triggered_at')) {
+      context.handle(
+        _triggeredAtMeta,
+        triggeredAt.isAcceptableOrUnknown(
+          data['triggered_at']!,
+          _triggeredAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PlaceReminder map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlaceReminder(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      placeName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}place_name'],
+      )!,
+      latitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}latitude'],
+      )!,
+      longitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}longitude'],
+      )!,
+      radius: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}radius'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      triggeredAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}triggered_at'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PlaceRemindersTable createAlias(String alias) {
+    return $PlaceRemindersTable(attachedDatabase, alias);
+  }
+}
+
+class PlaceReminder extends DataClass implements Insertable<PlaceReminder> {
+  final int id;
+  final String title;
+  final String placeName;
+  final double latitude;
+  final double longitude;
+  final int radius;
+  final bool isActive;
+  final DateTime? triggeredAt;
+  final DateTime createdAt;
+  const PlaceReminder({
+    required this.id,
+    required this.title,
+    required this.placeName,
+    required this.latitude,
+    required this.longitude,
+    required this.radius,
+    required this.isActive,
+    this.triggeredAt,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['title'] = Variable<String>(title);
+    map['place_name'] = Variable<String>(placeName);
+    map['latitude'] = Variable<double>(latitude);
+    map['longitude'] = Variable<double>(longitude);
+    map['radius'] = Variable<int>(radius);
+    map['is_active'] = Variable<bool>(isActive);
+    if (!nullToAbsent || triggeredAt != null) {
+      map['triggered_at'] = Variable<DateTime>(triggeredAt);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  PlaceRemindersCompanion toCompanion(bool nullToAbsent) {
+    return PlaceRemindersCompanion(
+      id: Value(id),
+      title: Value(title),
+      placeName: Value(placeName),
+      latitude: Value(latitude),
+      longitude: Value(longitude),
+      radius: Value(radius),
+      isActive: Value(isActive),
+      triggeredAt: triggeredAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(triggeredAt),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory PlaceReminder.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlaceReminder(
+      id: serializer.fromJson<int>(json['id']),
+      title: serializer.fromJson<String>(json['title']),
+      placeName: serializer.fromJson<String>(json['placeName']),
+      latitude: serializer.fromJson<double>(json['latitude']),
+      longitude: serializer.fromJson<double>(json['longitude']),
+      radius: serializer.fromJson<int>(json['radius']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      triggeredAt: serializer.fromJson<DateTime?>(json['triggeredAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'title': serializer.toJson<String>(title),
+      'placeName': serializer.toJson<String>(placeName),
+      'latitude': serializer.toJson<double>(latitude),
+      'longitude': serializer.toJson<double>(longitude),
+      'radius': serializer.toJson<int>(radius),
+      'isActive': serializer.toJson<bool>(isActive),
+      'triggeredAt': serializer.toJson<DateTime?>(triggeredAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  PlaceReminder copyWith({
+    int? id,
+    String? title,
+    String? placeName,
+    double? latitude,
+    double? longitude,
+    int? radius,
+    bool? isActive,
+    Value<DateTime?> triggeredAt = const Value.absent(),
+    DateTime? createdAt,
+  }) => PlaceReminder(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    placeName: placeName ?? this.placeName,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
+    radius: radius ?? this.radius,
+    isActive: isActive ?? this.isActive,
+    triggeredAt: triggeredAt.present ? triggeredAt.value : this.triggeredAt,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  PlaceReminder copyWithCompanion(PlaceRemindersCompanion data) {
+    return PlaceReminder(
+      id: data.id.present ? data.id.value : this.id,
+      title: data.title.present ? data.title.value : this.title,
+      placeName: data.placeName.present ? data.placeName.value : this.placeName,
+      latitude: data.latitude.present ? data.latitude.value : this.latitude,
+      longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      radius: data.radius.present ? data.radius.value : this.radius,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      triggeredAt: data.triggeredAt.present
+          ? data.triggeredAt.value
+          : this.triggeredAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlaceReminder(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('placeName: $placeName, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('radius: $radius, ')
+          ..write('isActive: $isActive, ')
+          ..write('triggeredAt: $triggeredAt, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    title,
+    placeName,
+    latitude,
+    longitude,
+    radius,
+    isActive,
+    triggeredAt,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlaceReminder &&
+          other.id == this.id &&
+          other.title == this.title &&
+          other.placeName == this.placeName &&
+          other.latitude == this.latitude &&
+          other.longitude == this.longitude &&
+          other.radius == this.radius &&
+          other.isActive == this.isActive &&
+          other.triggeredAt == this.triggeredAt &&
+          other.createdAt == this.createdAt);
+}
+
+class PlaceRemindersCompanion extends UpdateCompanion<PlaceReminder> {
+  final Value<int> id;
+  final Value<String> title;
+  final Value<String> placeName;
+  final Value<double> latitude;
+  final Value<double> longitude;
+  final Value<int> radius;
+  final Value<bool> isActive;
+  final Value<DateTime?> triggeredAt;
+  final Value<DateTime> createdAt;
+  const PlaceRemindersCompanion({
+    this.id = const Value.absent(),
+    this.title = const Value.absent(),
+    this.placeName = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.radius = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.triggeredAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  PlaceRemindersCompanion.insert({
+    this.id = const Value.absent(),
+    required String title,
+    required String placeName,
+    required double latitude,
+    required double longitude,
+    this.radius = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.triggeredAt = const Value.absent(),
+    required DateTime createdAt,
+  }) : title = Value(title),
+       placeName = Value(placeName),
+       latitude = Value(latitude),
+       longitude = Value(longitude),
+       createdAt = Value(createdAt);
+  static Insertable<PlaceReminder> custom({
+    Expression<int>? id,
+    Expression<String>? title,
+    Expression<String>? placeName,
+    Expression<double>? latitude,
+    Expression<double>? longitude,
+    Expression<int>? radius,
+    Expression<bool>? isActive,
+    Expression<DateTime>? triggeredAt,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (title != null) 'title': title,
+      if (placeName != null) 'place_name': placeName,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (radius != null) 'radius': radius,
+      if (isActive != null) 'is_active': isActive,
+      if (triggeredAt != null) 'triggered_at': triggeredAt,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  PlaceRemindersCompanion copyWith({
+    Value<int>? id,
+    Value<String>? title,
+    Value<String>? placeName,
+    Value<double>? latitude,
+    Value<double>? longitude,
+    Value<int>? radius,
+    Value<bool>? isActive,
+    Value<DateTime?>? triggeredAt,
+    Value<DateTime>? createdAt,
+  }) {
+    return PlaceRemindersCompanion(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      placeName: placeName ?? this.placeName,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      radius: radius ?? this.radius,
+      isActive: isActive ?? this.isActive,
+      triggeredAt: triggeredAt ?? this.triggeredAt,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (placeName.present) {
+      map['place_name'] = Variable<String>(placeName.value);
+    }
+    if (latitude.present) {
+      map['latitude'] = Variable<double>(latitude.value);
+    }
+    if (longitude.present) {
+      map['longitude'] = Variable<double>(longitude.value);
+    }
+    if (radius.present) {
+      map['radius'] = Variable<int>(radius.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (triggeredAt.present) {
+      map['triggered_at'] = Variable<DateTime>(triggeredAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlaceRemindersCompanion(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('placeName: $placeName, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('radius: $radius, ')
+          ..write('isActive: $isActive, ')
+          ..write('triggeredAt: $triggeredAt, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2843,6 +3394,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $HabitLogsTable habitLogs = $HabitLogsTable(this);
   late final $ActivityLogsTable activityLogs = $ActivityLogsTable(this);
   late final $UserSettingsTable userSettings = $UserSettingsTable(this);
+  late final $PlaceRemindersTable placeReminders = $PlaceRemindersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2855,6 +3407,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     habitLogs,
     activityLogs,
     userSettings,
+    placeReminders,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -4804,6 +5357,289 @@ typedef $$UserSettingsTableProcessedTableManager =
       UserSetting,
       PrefetchHooks Function()
     >;
+typedef $$PlaceRemindersTableCreateCompanionBuilder =
+    PlaceRemindersCompanion Function({
+      Value<int> id,
+      required String title,
+      required String placeName,
+      required double latitude,
+      required double longitude,
+      Value<int> radius,
+      Value<bool> isActive,
+      Value<DateTime?> triggeredAt,
+      required DateTime createdAt,
+    });
+typedef $$PlaceRemindersTableUpdateCompanionBuilder =
+    PlaceRemindersCompanion Function({
+      Value<int> id,
+      Value<String> title,
+      Value<String> placeName,
+      Value<double> latitude,
+      Value<double> longitude,
+      Value<int> radius,
+      Value<bool> isActive,
+      Value<DateTime?> triggeredAt,
+      Value<DateTime> createdAt,
+    });
+
+class $$PlaceRemindersTableFilterComposer
+    extends Composer<_$AppDatabase, $PlaceRemindersTable> {
+  $$PlaceRemindersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get placeName => $composableBuilder(
+    column: $table.placeName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get radius => $composableBuilder(
+    column: $table.radius,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get triggeredAt => $composableBuilder(
+    column: $table.triggeredAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PlaceRemindersTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlaceRemindersTable> {
+  $$PlaceRemindersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get placeName => $composableBuilder(
+    column: $table.placeName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get radius => $composableBuilder(
+    column: $table.radius,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get triggeredAt => $composableBuilder(
+    column: $table.triggeredAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PlaceRemindersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlaceRemindersTable> {
+  $$PlaceRemindersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get placeName =>
+      $composableBuilder(column: $table.placeName, builder: (column) => column);
+
+  GeneratedColumn<double> get latitude =>
+      $composableBuilder(column: $table.latitude, builder: (column) => column);
+
+  GeneratedColumn<double> get longitude =>
+      $composableBuilder(column: $table.longitude, builder: (column) => column);
+
+  GeneratedColumn<int> get radius =>
+      $composableBuilder(column: $table.radius, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get triggeredAt => $composableBuilder(
+    column: $table.triggeredAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$PlaceRemindersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PlaceRemindersTable,
+          PlaceReminder,
+          $$PlaceRemindersTableFilterComposer,
+          $$PlaceRemindersTableOrderingComposer,
+          $$PlaceRemindersTableAnnotationComposer,
+          $$PlaceRemindersTableCreateCompanionBuilder,
+          $$PlaceRemindersTableUpdateCompanionBuilder,
+          (
+            PlaceReminder,
+            BaseReferences<_$AppDatabase, $PlaceRemindersTable, PlaceReminder>,
+          ),
+          PlaceReminder,
+          PrefetchHooks Function()
+        > {
+  $$PlaceRemindersTableTableManager(
+    _$AppDatabase db,
+    $PlaceRemindersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlaceRemindersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlaceRemindersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlaceRemindersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> placeName = const Value.absent(),
+                Value<double> latitude = const Value.absent(),
+                Value<double> longitude = const Value.absent(),
+                Value<int> radius = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime?> triggeredAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => PlaceRemindersCompanion(
+                id: id,
+                title: title,
+                placeName: placeName,
+                latitude: latitude,
+                longitude: longitude,
+                radius: radius,
+                isActive: isActive,
+                triggeredAt: triggeredAt,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String title,
+                required String placeName,
+                required double latitude,
+                required double longitude,
+                Value<int> radius = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime?> triggeredAt = const Value.absent(),
+                required DateTime createdAt,
+              }) => PlaceRemindersCompanion.insert(
+                id: id,
+                title: title,
+                placeName: placeName,
+                latitude: latitude,
+                longitude: longitude,
+                radius: radius,
+                isActive: isActive,
+                triggeredAt: triggeredAt,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$PlaceRemindersTable, PlaceReminder>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $PlaceRemindersTable,
+                    PlaceReminder
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PlaceRemindersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PlaceRemindersTable,
+      PlaceReminder,
+      $$PlaceRemindersTableFilterComposer,
+      $$PlaceRemindersTableOrderingComposer,
+      $$PlaceRemindersTableAnnotationComposer,
+      $$PlaceRemindersTableCreateCompanionBuilder,
+      $$PlaceRemindersTableUpdateCompanionBuilder,
+      (
+        PlaceReminder,
+        BaseReferences<_$AppDatabase, $PlaceRemindersTable, PlaceReminder>,
+      ),
+      PlaceReminder,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4822,4 +5658,6 @@ class $AppDatabaseManager {
       $$ActivityLogsTableTableManager(_db, _db.activityLogs);
   $$UserSettingsTableTableManager get userSettings =>
       $$UserSettingsTableTableManager(_db, _db.userSettings);
+  $$PlaceRemindersTableTableManager get placeReminders =>
+      $$PlaceRemindersTableTableManager(_db, _db.placeReminders);
 }

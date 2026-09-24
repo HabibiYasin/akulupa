@@ -9,6 +9,7 @@ import 'features/reminders/schedule_page.dart';
 import 'features/settings/settings_page.dart';
 import 'shared/providers.dart';
 import 'shared/widgets.dart';
+import 'core/platform/android_integrations.dart';
 
 class AkuLupaApp extends StatelessWidget {
   const AkuLupaApp({super.key});
@@ -93,10 +94,27 @@ class _AppShellState extends ConsumerState<AppShell>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    AndroidIntegrations.channel.setMethodCallHandler((call) async {
+      if (call.method == 'documentRecovered') await recoverDocument();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => recoverDocument());
+  }
+
+  Future<void> recoverDocument() async {
+    try {
+      final message = await ref
+          .read(servicesProvider)
+          .integrations
+          .recoverDocument();
+      if (mounted && message != null) showMessage(context, message);
+    } catch (_) {
+      /* Native integrations are unavailable in host widget tests. */
+    }
   }
 
   @override
   void dispose() {
+    AndroidIntegrations.channel.setMethodCallHandler(null);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -105,6 +123,7 @@ class _AppShellState extends ConsumerState<AppShell>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       ref.read(servicesProvider).refreshNotifications();
+      ref.read(servicesProvider).refreshIntegrations();
     }
   }
 

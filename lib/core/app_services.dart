@@ -1,5 +1,11 @@
 import 'package:flutter/foundation.dart';
 
+import 'backup/backup_service.dart';
+import 'platform/android_integrations.dart';
+import 'platform/widget_service.dart';
+import '../features/places/place_repository.dart';
+import '../features/places/place_service.dart';
+
 import 'database/app_database.dart';
 import 'command_actions.dart';
 import 'models.dart';
@@ -61,11 +67,21 @@ class AppServices {
       habits: habits,
       settings: settings,
     );
+    backups = LocalBackupService(db, this.photos);
+    places = PlaceRepository(db);
+    placeService = PlaceService(places, integrations);
+    widget = WidgetService(db, integrations);
   }
   final AppDatabase db;
   final AndroidNotificationGateway notifications;
   final SpeechService speech;
   final PhotoService photos;
+  final integrations = const AndroidIntegrations();
+  late final LocalBackupService backups;
+  late final PlaceRepository places;
+  late final PlaceService placeService;
+  late final WidgetService widget;
+  final integrationWarning = ValueNotifier<String?>(null);
   late final ItemRepository items;
   late final ReminderRepository reminders;
   late final HabitRepository habits;
@@ -87,6 +103,8 @@ class AppServices {
   Future<void> initialize() async {
     await settings
         .get(); // Surface DB failures instead of silently losing writes.
+    widget.start();
+    await refreshIntegrations();
     try {
       final launch = await notifications.initialize((response) {
         notificationAction(response.payload, response.actionId);
@@ -101,6 +119,32 @@ class AppServices {
       debugPrint('Notification initialization: $e');
     }
   }
+
+  Future<void> refreshIntegrations() async {
+    try {
+      await placeService.refresh();
+      integrationWarning.value = null;
+    } catch (_) {
+      integrationWarning.value = 'Pengingat lokasi belum aktif. Periksa izin dan GPS, lalu coba aktifkan ulang.';
+    }
+  }
+
+  Future<void> restoreBackup(BackupPreview preview) => _serialized(
+    () => placeService.replaceData(() async {
+      await notifications.plugin.cancelAll();
+      try {
+        await backups.restore(preview);
+      } finally {
+        // Even failed restores must re-establish alarms for the surviving data.
+        try {
+          await coordinator.reconcile();
+        } catch (_) {
+          notificationWarning.value = 'Data tersedia, tetapi alarm perlu disinkronkan ulang di Pengaturan.';
+        }
+        await widget.refresh();
+      }
+    }),
+  );
 
   void _permissionWarning() {
     notificationWarning.value = !notifications.enabled
