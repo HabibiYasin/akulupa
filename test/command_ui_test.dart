@@ -46,7 +46,10 @@ Future<AppServices> setup(
 }
 
 Future<void> submit(WidgetTester tester, String text) async {
+  await tester.tap(find.byTooltip('Ketik perintah'));
+  await tester.pumpAndSettle();
   await tester.enterText(find.byType(TextField).first, text);
+  await tester.pump();
   await tester.ensureVisible(find.text('Bantu aku ingat'));
   await tester.tap(find.text('Bantu aku ingat'));
   await tester.pumpAndSettle();

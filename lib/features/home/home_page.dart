@@ -7,6 +7,7 @@ import '../../core/utils/dates.dart';
 import '../../shared/providers.dart';
 import '../../shared/widgets.dart';
 import '../memory/memory_page.dart';
+import '../activity/activity_page.dart';
 import '../reminders/schedule_page.dart';
 import 'command_confirmation.dart';
 import 'command_fallback.dart';
@@ -18,14 +19,13 @@ class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key, required this.onNavigate});
   final ValueChanged<int> onNavigate;
   @override
-  ConsumerState<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => HomePageState();
 }
 
-class _HomePageState extends ConsumerState<HomePage> {
+class HomePageState extends ConsumerState<HomePage> {
   final input = TextEditingController();
   final focus = FocusNode();
   bool busy = false;
-  String exampleHint = 'Taruh kunci motor di laci meja';
   PreparedPhoto? recoveredPhoto;
   String? recoveryError;
   @override
@@ -48,11 +48,15 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  Future<void> voice() async {
+  Future<void> openInput({bool startWithVoice = true}) async {
+    if (busy) return;
     focus.unfocus();
     final result = await showDialog<String>(
       context: context,
-      builder: (_) => VoiceInput(speech: ref.read(servicesProvider).speech),
+      builder: (_) => VoiceInput(
+        speech: ref.read(servicesProvider).speech,
+        startWithVoice: startWithVoice,
+      ),
     );
     if (result != null && mounted) {
       setState(() => input.text = result);
@@ -163,22 +167,6 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ],
         ),
-        const SizedBox(height: 26),
-        const Text(
-          'Apa yang mau\nkamu ingat?',
-          style: TextStyle(
-            fontSize: 37,
-            height: 1.15,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -1.4,
-          ),
-        ),
-        const SizedBox(height: 12),
-        const Text(
-          'Taruh di sini. Biar pikiranmu lebih ringan.',
-          style: TextStyle(color: muted, fontSize: 15),
-        ),
-        const SizedBox(height: 24),
         if (recoveredPhoto != null)
           Card(
             child: ListTile(
@@ -219,113 +207,6 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         if (recoveryError != null)
           Text(recoveryError!, style: const TextStyle(color: muted)),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: ink,
-            borderRadius: BorderRadius.circular(28),
-          ),
-          child: Column(
-            children: [
-              const Text(
-                'SATU TEMPAT UNTUK MENGINGAT',
-                style: TextStyle(
-                  color: Color(0xFFB7CABB),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.7,
-                ),
-              ),
-              const SizedBox(height: 18),
-              Tooltip(
-                message: 'Ucapkan perintah',
-                child: Semantics(
-                  label: 'Input suara',
-                  button: true,
-                  child: InkWell(
-                    onTap: busy ? null : voice,
-                    customBorder: const CircleBorder(),
-                    child: Container(
-                      width: 76,
-                      height: 76,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFD3E5BC),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFF406052),
-                          width: 7,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.mic_none_rounded,
-                        color: ink,
-                        size: 33,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 9),
-              const Text(
-                'Tekan mic untuk bicara, atau tulis di bawah',
-                style: TextStyle(color: Color(0xFFC9D8CB), fontSize: 12),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: input,
-                focusNode: focus,
-                enabled: !busy,
-                minLines: 2,
-                maxLines: 4,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  hintText: 'Contoh: $exampleHint',
-                  filled: true,
-                  fillColor: Color(0xFFFAFBF6),
-                  contentPadding: EdgeInsets.all(16),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFE4BA72),
-                    foregroundColor: ink,
-                  ),
-                  onPressed: busy ? null : submit,
-                  icon: Icon(
-                    busy ? Icons.hourglass_empty : Icons.arrow_forward,
-                    size: 18,
-                  ),
-                  label: Text(busy ? 'Sebentar…' : 'Bantu aku ingat'),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 8,
-          runSpacing: 6,
-          children: [
-            for (final example in [
-              ('Barang', 'Taruh kunci motor di laci meja'),
-              ('Pengingat', 'Jumat ini aku ke dokter jam 9 pagi'),
-              ('Rutinitas', 'Minum obat setiap hari jam 8 pagi'),
-              ('Aktivitas', 'Tadi sudah olahraga'),
-            ])
-              ActionChip(
-                label: Text(example.$1),
-                onPressed: busy
-                    ? null
-                    : () {
-                        setState(() => exampleHint = example.$2);
-                        focus.requestFocus();
-                      },
-              ),
-          ],
-        ),
         ValueListenableBuilder(
           valueListenable: ref.watch(servicesProvider).notificationWarning,
           builder: (_, warning, _) => warning == null
@@ -368,21 +249,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ],
                 ),
         ),
-        const SizedBox(height: 28),
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.lock_outline, size: 13, color: muted),
-            SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                'Pribadi, tersimpan di perangkatmu.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: muted, fontSize: 11),
-              ),
-            ),
-          ],
+        const SectionTitle('Jejak'),
+        const Text(
+          'Lokasi barang dan aktivitas yang sudah kamu catat.',
+          style: TextStyle(color: muted),
         ),
+        const SizedBox(height: 12),
+        const ActivityTimeline(),
+        const SizedBox(height: 40),
       ],
     );
   }

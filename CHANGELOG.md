@@ -1,6 +1,13 @@
 # Changelog
 
-## Belum dirilis
+## 0.3.1 — 2026-09-27
+
+- Versi aplikasi 0.3.1+4; tag `v0.3.1`.
+
+- Beranda langsung menampilkan Hari Ini; bagian judul besar, kartu input, dan kategori dipindahkan dari halaman utama. Jejak menjadi bagian paling bawah Beranda, bukan tab terpisah.
+- Mic berada di tengah bawah navigasi dan membuka popup dari Beranda, Barang, atau Jadwal. Mengetik tersedia lewat ikon keyboard atau pilihan Ketik saja di popup; contoh kategori tetap menjadi placeholder.
+
+- Koreksi lifecycle recognizer: jeda otomatis dimulai setelah ada ucapan, status berhenti merekam tidak membatalkan hasil akhir, dan stop menunggu hasil akhir sebelum sesi berikutnya. Kode error Android ditampilkan agar kegagalan mikrofon/layanan/sesi sibuk bisa dibedakan.
 
 - Mic langsung mendengarkan saat dibuka; jeda ucapan sekitar 2 detik atau stop manual langsung memproses command dan membuka konfirmasi yang sesuai.
 - Menghapus langkah Gunakan teks untuk hasil suara. Catatan tetap disimpan setelah konfirmasi pengguna.

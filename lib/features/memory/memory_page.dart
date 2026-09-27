@@ -116,7 +116,7 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
                       ? 'Belum ada barang yang dicatat'
                       : 'Belum ketemu',
                   subtitle: query.isEmpty
-                      ? 'Ketik “Taruh kunci di laci” di Beranda untuk mulai.'
+                      ? 'Tekan mic atau ikon keyboard, lalu masukkan “Taruh kunci di laci”.'
                       : 'Coba nama barang atau lokasi lainnya.',
                 )
               : Column(

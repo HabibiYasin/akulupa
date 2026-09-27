@@ -244,7 +244,7 @@ class TodaySchedule extends ConsumerWidget {
                   const EmptyCard(
                     icon: Icons.wb_sunny_outlined,
                     title: 'Hari ini masih lapang',
-                    subtitle: 'Tambahkan pengingat atau rutinitas dari kolom di atas.',
+                    subtitle: 'Tekan mic di bawah atau ikon keyboard untuk menambahkan pengingat dan rutinitas.',
                   )
                 else
                   ...rows.map((r) => r.child),

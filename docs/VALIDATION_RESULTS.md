@@ -1,5 +1,24 @@
 # Hasil verifikasi
 
+## Verifikasi rilis 0.3.1+4 — 27 September 2026
+
+- `flutter analyze`: bersih. `flutter test`: seluruh **225 tes lulus**.
+- Tes backup memunculkan peringatan debug Drift tentang beberapa instance database; tidak ada tes gagal.
+- Verifikasi rilis ini tidak menjalankan ulang build APK atau pengujian perangkat fisik.
+
+## Penyederhanaan Beranda — 27 September 2026
+
+- Beranda menampilkan tanggal, Hari Ini, Memory Terbaru, lalu Jejak. Hero/input besar dan tab Jejak dihapus. Mic berlokasi center-docked dan popup dapat dipanggil dari setiap tab; input teks tersedia lewat keyboard/pilihan Ketik saja.
+- Analyzer bersih dan **225 tes lulus**, termasuk alur popup → konfirmasi → simpan/cari serta layar kecil dengan skala teks besar. APK berhasil dipasang dan tampilan Beranda diperiksa pada HP Android 16 yang terhubung melalui USB.
+
+## Koreksi sesi suara — 27 September 2026
+
+- Menghapus `pauseFor: 2 detik` pada plugin: timer tersebut berjalan sejak listen dimulai dan dapat menghentikan sesi sebelum hasil ucapan pertama. Timer setelah hasil ucapan pada UI tetap 2 detik.
+- `notListening` tidak lagi dianggap seluruh proses pengenalan selesai. Stop menunggu hasil akhir atau batas tunggu 2 detik; cleanup satu kali per sesi dan cancel otomatis plugin dimatikan agar tidak berlomba dengan sesi baru. Mode listen menggunakan dictation.
+- Error yang datang setelah `doneNoResult` tetap ditampilkan, termasuk kode busy/client/audio/server. Tidak ada perubahan ke layanan suara online otomatis.
+- **225 tes lulus**. Tes sesi sekarang memakai implementasi Dart `speech_to_text` sebenarnya dengan method channel Android palsu: menunggu ucapan awal, hasil akhir yang terlambat, stop, antrean cancel/listen, serta status selesai sebelum error.
+- HP yang terdaftar di ADB berstatus offline; percobaan menyambung ulang timeout. Belum membaca log HP atau memverifikasi input mikrofon fisik pada perbaikan ini. Hasil pengujian tidak membuktikan kompatibilitas layanan suara HP tertentu.
+
 ## Perbaikan alur suara setelah Phase 3
 
 - Mic otomatis mulai saat dialog dibuka; 2 detik tanpa hasil ucapan baru atau stop manual meneruskan command ke alur konfirmasi tanpa tombol Gunakan teks.

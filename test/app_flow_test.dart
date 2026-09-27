@@ -33,11 +33,14 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Ketik perintah'));
+      await tester.pumpAndSettle();
       await tester.enterText(
         find.byType(TextField).first,
         'Jumat ini aku ke psikiater jam 9',
       );
       await tester.ensureVisible(find.text('Bantu aku ingat'));
+      await tester.pump();
       await tester.tap(find.text('Bantu aku ingat'));
       await tester.pumpAndSettle();
       expect(find.text('Periksa pengingat'), findsOneWidget);
@@ -77,12 +80,24 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Apa yang mau\nkamu ingat?'), findsOneWidget);
+    expect(find.text('Hari Ini'), findsOneWidget);
+    expect(find.text('Apa yang mau\nkamu ingat?'), findsNothing);
+    expect(find.byType(FloatingActionButton), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(BottomAppBar),
+        matching: find.text('Jejak'),
+      ),
+      findsNothing,
+    );
+    await tester.tap(find.byTooltip('Ketik perintah'));
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.byType(TextField).first,
       'Taruh kunci motor di laci meja',
     );
     await tester.ensureVisible(find.text('Bantu aku ingat'));
+    await tester.pump();
     await tester.tap(find.text('Bantu aku ingat'));
     await tester.pumpAndSettle();
     expect(find.text('Ingat lokasi ini?'), findsOneWidget);
@@ -99,7 +114,12 @@ void main() {
           .location,
       'laci meja',
     );
-    await tester.tap(find.byType(NavigationDestination).at(1));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(BottomAppBar),
+        matching: find.text('Barang'),
+      ),
+    );
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).first, 'laci');
     await tester.pumpAndSettle();

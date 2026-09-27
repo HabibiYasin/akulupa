@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'features/activity/activity_page.dart';
 import 'features/home/home_page.dart';
 import 'features/memory/memory_page.dart';
 import 'features/reminders/schedule_page.dart';
@@ -90,6 +89,60 @@ class AppShell extends ConsumerStatefulWidget {
 class _AppShellState extends ConsumerState<AppShell>
     with WidgetsBindingObserver {
   int index = 0;
+  final homeKey = GlobalKey<HomePageState>();
+  bool inputOpen = false;
+  Future<void> openInput({bool voice = true}) async {
+    if (inputOpen) return;
+    inputOpen = true;
+    try {
+      await homeKey.currentState?.openInput(startWithVoice: voice);
+    } finally {
+      inputOpen = false;
+    }
+  }
+
+  Widget destination(int value, IconData icon, String label) => Expanded(
+    child: Semantics(
+      selected: index == value,
+      button: true,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => setState(() => index = value),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: index == value ? mint : Colors.transparent,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  icon,
+                  color: index == value ? ink : muted,
+                  size: 23,
+                ),
+              ),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: index == value ? ink : muted,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
   @override
   void initState() {
     super.initState();
@@ -150,6 +203,11 @@ class _AppShellState extends ConsumerState<AppShell>
       ),
       actions: [
         IconButton(
+          tooltip: 'Ketik perintah',
+          onPressed: () => openInput(voice: false),
+          icon: const Icon(Icons.keyboard_alt_outlined),
+        ),
+        IconButton(
           tooltip: 'Pengaturan',
           onPressed: () => Navigator.push(
             context,
@@ -167,36 +225,55 @@ class _AppShellState extends ConsumerState<AppShell>
           child: IndexedStack(
             index: index,
             children: [
-              HomePage(onNavigate: (value) => setState(() => index = value)),
+              HomePage(
+                key: homeKey,
+                onNavigate: (value) => setState(() => index = value),
+              ),
               const MemoryPage(),
               const SchedulePage(),
-              const ActivityPage(),
             ],
           ),
         ),
       ),
     ),
-    bottomNavigationBar: NavigationBar(
-      selectedIndex: index,
-      onDestinationSelected: (value) => setState(() => index = value),
-      destinations: const [
-        NavigationDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home_rounded),
-          label: 'Beranda',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.inventory_2_outlined),
-          selectedIcon: Icon(Icons.inventory_2),
-          label: 'Barang',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.calendar_today_outlined),
-          selectedIcon: Icon(Icons.calendar_month),
-          label: 'Jadwal',
-        ),
-        NavigationDestination(icon: Icon(Icons.history), label: 'Jejak'),
-      ],
+    floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    floatingActionButton: FloatingActionButton(
+      tooltip: 'Ucapkan perintah',
+      onPressed: openInput,
+      backgroundColor: const Color(0xFFD3E5BC),
+      foregroundColor: ink,
+      shape: const CircleBorder(),
+      elevation: 3,
+      child: const Icon(Icons.mic_none_rounded, size: 30),
+    ),
+    bottomNavigationBar: BottomAppBar(
+      color: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      shape: const CircularNotchedRectangle(),
+      notchMargin: 8,
+      height:
+          82 + 16 * (MediaQuery.textScalerOf(context).scale(1) - 1).clamp(0, 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                destination(0, Icons.home_rounded, 'Beranda'),
+                destination(1, Icons.inventory_2_outlined, 'Barang'),
+              ],
+            ),
+          ),
+          const SizedBox(width: 80),
+          Expanded(
+            child: Row(
+              children: [
+                destination(2, Icons.calendar_today_outlined, 'Jadwal'),
+              ],
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }

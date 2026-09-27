@@ -5,14 +5,21 @@ import 'package:flutter/material.dart';
 import '../../core/speech/speech_service.dart';
 
 class VoiceInput extends StatefulWidget {
-  const VoiceInput({super.key, required this.speech});
+  const VoiceInput({
+    super.key,
+    required this.speech,
+    this.startWithVoice = true,
+  });
   final SpeechService speech;
+  final bool startWithVoice;
   @override
   State<VoiceInput> createState() => _VoiceInputState();
 }
 
 class _VoiceInputState extends State<VoiceInput> with WidgetsBindingObserver {
   final text = TextEditingController();
+  bool typing = false;
+  String exampleHint = 'Taruh kunci motor di laci meja';
   bool listening = false;
   bool starting = false;
   bool finishing = false;
@@ -25,9 +32,30 @@ class _VoiceInputState extends State<VoiceInput> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    typing = !widget.startWithVoice;
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) unawaited(start());
+      if (mounted && widget.startWithVoice) unawaited(start());
+    });
+  }
+
+  Future<void> typeInstead() async {
+    interrupted = true;
+    final session = ++generation;
+    silence?.cancel();
+    ended?.cancel();
+    setState(() {
+      starting = true;
+      listening = false;
+      finishing = false;
+    });
+    await widget.speech.cancel().catchError((Object _) {});
+    if (!mounted || session != generation) return;
+    ownsSession = false;
+    setState(() {
+      typing = true;
+      starting = false;
+      error = null;
     });
   }
 
@@ -37,6 +65,7 @@ class _VoiceInputState extends State<VoiceInput> with WidgetsBindingObserver {
     ended?.cancel();
     setState(() {
       starting = true;
+      typing = false;
       finishing = false;
       interrupted = false;
       text.clear();
@@ -162,32 +191,34 @@ class _VoiceInputState extends State<VoiceInput> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Ucapkan yang mau diingat'),
+    title: Text(typing ? 'Apa yang mau diingat?' : 'Ucapkan yang mau diingat'),
     content: SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Bicara dalam bahasa Indonesia. Diam 2 detik atau tekan mic untuk langsung memproses perintah.',
-          ),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: starting || finishing
-                ? null
-                : listening
-                ? finish
-                : start,
-            icon: Icon(listening ? Icons.mic : Icons.mic_none),
-            label: Text(
-              finishing
-                  ? 'Memproses perintah…'
-                  : starting
-                  ? 'Menyiapkan mikrofon…'
-                  : listening
-                  ? 'Selesai & proses'
-                  : 'Mulai bicara',
+          if (!typing)
+            const Text(
+              'Bicara dalam bahasa Indonesia. Diam 2 detik atau tekan mic untuk langsung memproses perintah.',
             ),
-          ),
+          const SizedBox(height: 16),
+          if (!typing)
+            FilledButton.icon(
+              onPressed: starting || finishing
+                  ? null
+                  : listening
+                  ? finish
+                  : start,
+              icon: Icon(listening ? Icons.mic : Icons.mic_none),
+              label: Text(
+                finishing
+                    ? 'Memproses perintah…'
+                    : starting
+                    ? 'Menyiapkan mikrofon…'
+                    : listening
+                    ? 'Selesai & proses'
+                    : 'Mulai bicara',
+              ),
+            ),
           if (listening)
             const Padding(
               padding: EdgeInsets.all(8),
@@ -196,10 +227,44 @@ class _VoiceInputState extends State<VoiceInput> with WidgetsBindingObserver {
           const SizedBox(height: 12),
           TextField(
             controller: text,
-            readOnly: true,
+            readOnly: !typing,
+            autofocus: typing,
             minLines: 2,
             maxLines: 5,
-            decoration: const InputDecoration(labelText: 'Yang terdengar'),
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              labelText: typing ? 'Perintah' : 'Yang terdengar',
+              hintText: typing ? 'Contoh: $exampleHint' : null,
+            ),
+          ),
+          if (typing)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  for (final example in [
+                    ('Barang', 'Taruh kunci motor di laci meja'),
+                    ('Pengingat', 'Jumat ini aku ke dokter jam 9 pagi'),
+                    ('Rutinitas', 'Minum obat setiap hari jam 8 pagi'),
+                    ('Aktivitas', 'Tadi sudah olahraga'),
+                  ])
+                    ActionChip(
+                      label: Text(example.$1),
+                      onPressed: () => setState(() => exampleHint = example.$2),
+                    ),
+                ],
+              ),
+            ),
+          TextButton.icon(
+            onPressed: starting || finishing
+                ? null
+                : typing
+                ? start
+                : typeInstead,
+            icon: Icon(typing ? Icons.mic_none : Icons.keyboard_alt_outlined),
+            label: Text(typing ? 'Pakai suara' : 'Ketik saja'),
           ),
           if (error != null)
             Padding(
@@ -219,6 +284,13 @@ class _VoiceInputState extends State<VoiceInput> with WidgetsBindingObserver {
         onPressed: () => Navigator.pop(context),
         child: const Text('Batal'),
       ),
+      if (typing)
+        FilledButton(
+          onPressed: text.text.trim().isEmpty
+              ? null
+              : () => Navigator.pop(context, text.text.trim()),
+          child: const Text('Bantu aku ingat'),
+        ),
     ],
   );
 }
